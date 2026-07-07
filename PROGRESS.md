@@ -9,8 +9,8 @@
 | # | Phase | Status |
 |---|---|---|
 | 1 | Project Setup & Infrastructure | ✅ Complete |
-| 2 | Authentication Pages | ▶ In Progress |
-| 3 | Landing Page | ⬜ Not Started |
+| 2 | Authentication Pages | ✅ Complete |
+| 3 | Landing Page | ▶ In Progress |
 | 4 | Multi-Step Application Form | ⬜ Not Started |
 | 5 | Gemini API Integration | ⬜ Not Started |
 | 6 | Report Page (Teaser + Paywall) | ⬜ Not Started |
@@ -36,10 +36,23 @@
 - GitHub repo created & pushed: https://github.com/Kushagra-17CEO/ychecker
 - Build passes with 0 TypeScript errors
 
+### Phase 2 — Authentication Pages ✅
+- `/login` page built with email/password form + Google OAuth button
+- Sign-up/login toggle on same page (isSignUp state)
+- Session management via Supabase SSR (cookie-based, persists across pages)
+- `/api/auth/callback` route handles Google OAuth redirect + code exchange
+- `middleware.ts` protects `/dashboard` and `/account` routes (redirects to `/login`)
+- Navbar component with auth-aware navigation (shows Dashboard/Account/Sign Out when logged in)
+- AuthModal component for `/apply` auth gate (Sunk Cost Effect framing)
+- Footer component with brand links
+- shadcn/ui components installed: button, card, input, label, separator, tabs
+- **Migration:** `middleware.ts` → `proxy.ts` (Next.js 16 deprecation fix, function renamed to `proxy`)
+- Build passes with 0 TypeScript errors, 0 deprecation warnings
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-07
-**Phase:** Starting Phase 2 — Authentication Pages
-**Summary:** Phase 1 infrastructure is fully built and builds without errors. Env variables updated with confirmed production keys including correct service_role JWT, Google OAuth credentials, and Gemini API key. Next action is to build the /login page with email/password + Google OAuth, session management, and the auth middleware.
+**Phase:** Starting Phase 3 — Landing Page
+**Summary:** Phase 2 authentication is fully built and verified. Middleware migrated to proxy per Next.js 16 convention. Next action is to build the full `/` landing page per Blueprint Section 4.3 with hero, social proof counter, 3-step explainer, pricing preview, and CTA.

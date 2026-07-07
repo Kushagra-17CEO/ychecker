@@ -1,6 +1,28 @@
 @import "tailwindcss";
 
 /*
+ * shadcn/ui CSS variable mappings
+ * Maps shadcn's expected variables to the YChecker design system colours
+ */
+:root {
+  --background: #FFFFFF;
+  --foreground: #111111;
+  --primary: #FF6B35;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #111111;
+  --muted: #F5F5F5;
+  --muted-foreground: #666666;
+  --accent: #FFF0E8;
+  --accent-foreground: #111111;
+  --destructive: #C0392B;
+  --border: #DDDDDD;
+  --input: #DDDDDD;
+  --ring: #FF6B35;
+  --radius: 0.5rem;
+}
+
+/*
  * YChecker Design System — Section 7 of Blueprint
  * All design tokens defined as CSS custom properties
  */

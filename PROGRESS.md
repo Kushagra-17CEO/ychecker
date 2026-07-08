@@ -10,8 +10,8 @@
 |---|---|---|
 | 1 | Project Setup & Infrastructure | ✅ Complete |
 | 2 | Authentication Pages | ✅ Complete |
-| 3 | Landing Page | ▶ In Progress |
-| 4 | Multi-Step Application Form | ⬜ Not Started |
+| 3 | Landing Page | ✅ Complete |
+| 4 | Multi-Step Application Form | ▶ In Progress |
 | 5 | Gemini API Integration | ⬜ Not Started |
 | 6 | Report Page (Teaser + Paywall) | ⬜ Not Started |
 | 7 | Payments (Razorpay) | ⬜ Not Started |
@@ -49,10 +49,24 @@
 - **Migration:** `middleware.ts` → `proxy.ts` (Next.js 16 deprecation fix, function renamed to `proxy`)
 - Build passes with 0 TypeScript errors, 0 deprecation warnings
 
+### Phase 3 — Landing Page ✅
+- Full landing page built per Blueprint Section 4.3
+- Hero section: loss-framed headline, sub-headline, CTA buttons
+- Live social proof counter: real weekly application count from Supabase (animated count-up, hidden when 0)
+- 3-step explainer: Paste Answers → Evaluated Like YC Partner → Get Feedback (with SVG icons)
+- "What Your Report Includes" features grid: 6 cards (Overall Score, 5-Section Breakdown, Fluff Detection, Blind Spot Analysis, Rewrite Suggestions, The Secret Score)
+- Pricing preview: $500k stakes anchoring header, AI Report ($19.99) and Expert Review ($79.99) cards side-by-side with feature checklists, "MOST POPULAR" badge
+- Risk reframe line below pricing cards
+- Final CTA section: "Stop guessing. Start knowing."
+- Fully responsive (mobile + desktop)
+- Server component with `queries.ts` for real data fetch
+- Pushed to GitHub, deployed to Vercel: https://ychecker.vercel.app
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-07
-**Phase:** Starting Phase 3 — Landing Page
-**Summary:** Phase 2 authentication is fully built and verified. Middleware migrated to proxy per Next.js 16 convention. Next action is to build the full `/` landing page per Blueprint Section 4.3 with hero, social proof counter, 3-step explainer, pricing preview, and CTA.
+**Phase:** Starting Phase 4 — Multi-Step Application Form
+**Summary:** Phases 1–3 are complete and deployed. Landing page is live on Vercel. Next action is to build the `/apply` page with a 5-step form using React Hook Form, Zod validation, progress bar, and auth gate modal on final submit.

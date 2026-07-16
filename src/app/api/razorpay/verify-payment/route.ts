@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email'
+import ReportReadyEmail from '@/../emails/report-ready'
+import ExpertReviewOrderedEmail from '@/../emails/expert-review-ordered'
+import AdminExpertNotifyEmail from '@/../emails/admin-expert-notify'
 
 /**
  * POST /api/razorpay/verify-payment
@@ -97,7 +101,34 @@ export async function POST(request: Request) {
         .update({ is_unlocked: true })
         .eq('id', report_id)
 
-      // TODO Phase 8: Send expert confirmation email to user + admin notification
+      // Send expert confirmation email to user + admin notification (non-blocking)
+      sendEmail({
+        to: user.email!,
+        subject: "We've Received Your Expert Review Order",
+        react: ExpertReviewOrderedEmail(),
+      }).catch((e) => console.error('Expert email to user failed:', e))
+
+      // Fetch user's one-liner for admin notification
+      if (report?.application_id) {
+        adminSupabase
+          .from('applications')
+          .select('one_liner')
+          .eq('id', report.application_id)
+          .single()
+          .then(({ data: app }) => {
+            const adminEmail = process.env.ADMIN_EMAIL
+            if (adminEmail) {
+              sendEmail({
+                to: adminEmail,
+                subject: 'New Expert Review Order — Action Required',
+                react: AdminExpertNotifyEmail({
+                  userEmail: user.email || 'unknown',
+                  oneLiner: app?.one_liner || 'N/A',
+                }),
+              }).catch((e) => console.error('Admin email failed:', e))
+            }
+          })
+      }
     } else {
       // AI Report — unlock immediately
       await adminSupabase
@@ -119,7 +150,12 @@ export async function POST(request: Request) {
           .eq('id', report.application_id)
       }
 
-      // TODO Phase 8: Send "Your AI Report is ready" email
+      // Send "Your AI Report is ready" email (non-blocking)
+      sendEmail({
+        to: user.email!,
+        subject: 'Your AI Report Is Ready',
+        react: ReportReadyEmail({ reportId: report_id }),
+      }).catch((e) => console.error('Report ready email failed:', e))
     }
 
     return NextResponse.json({

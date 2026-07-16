@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { sendEmail } from '@/lib/email'
+import WelcomeEmail from '@/../emails/welcome'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -33,6 +35,20 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // Send welcome email on first login (non-blocking)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email && !user.user_metadata?.welcome_email_sent) {
+        sendEmail({
+          to: user.email,
+          subject: 'Welcome to YChecker',
+          react: WelcomeEmail(),
+        })
+          .then(() =>
+            supabase.auth.updateUser({ data: { welcome_email_sent: true } })
+          )
+          .catch((e) => console.error('Welcome email failed:', e))
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
       if (isLocalEnv) {
@@ -49,3 +65,4 @@ export async function GET(request: Request) {
   // Return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/login?error=auth_callback_error`)
 }
+

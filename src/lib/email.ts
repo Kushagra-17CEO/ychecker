@@ -8,7 +8,7 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Default sender — update once domain is verified in Resend dashboard
-const FROM_EMAIL = 'YChecker <noreply@ychecker.com>'
+const FROM_EMAIL = 'YChecker <onboarding@resend.dev>'
 
 interface SendEmailOptions {
   to: string

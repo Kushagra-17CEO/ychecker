@@ -15,7 +15,7 @@
 | 5 | Gemini API Integration | ✅ Complete |
 | 6 | Report Page (Teaser + Paywall) | ✅ Complete |
 | 7 | Payments (Razorpay) | ✅ Complete |
-| 8 | Email System | ⬜ Not Started |
+| 8 | Email System | ✅ Complete |
 | 9 | Dashboard & Account Pages | ⬜ Not Started |
 | 10 | PDF Generation | ⬜ Not Started |
 | 11 | Security Hardening | ⬜ Not Started |
@@ -95,10 +95,25 @@
 - Razorpay checkout script added to layout.tsx (lazyOnload)
 - Build passes with 0 TypeScript errors
 
+### Phase 8 — Email System ✅
+- Installed `resend` and `@react-email/components`
+- Updated sender to `onboarding@resend.dev` (temporary, until domain verified)
+- Created 4 email templates in `/emails/`:
+  1. `welcome.tsx` — sent on first login (Welcome to YChecker, CTA to /apply)
+  2. `report-ready.tsx` — sent after AI Report payment (direct link to unlocked /report/[id])
+  3. `expert-review-ordered.tsx` — sent to user after Expert Review purchase (24–48hr turnaround)
+  4. `admin-expert-notify.tsx` — sent to ADMIN_EMAIL with user email, one-liner, link to /admin
+- Wired email sends into routes:
+  - `/api/auth/callback` — welcome email on first OAuth login (idempotent via user metadata)
+  - `/api/auth/welcome` — dedicated welcome email endpoint for email/password signups
+  - `/api/razorpay/verify-payment` — AI report ready email OR expert confirmation + admin notify
+- All emails fire non-blocking (fire-and-forget with `.catch`)
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-16
-**Phase:** Phase 8 — Email System is next
-**Summary:** Phases 1–7 are complete, pushed, and deployed to Vercel. Next action is Phase 8: build email templates with React Email, wire send calls into auth/evaluate/payment routes using Resend.
+**Phase:** Phase 9 — Dashboard & Account Pages is next
+**Summary:** Phases 1–8 are complete, pushed, and deployed to Vercel. Next action is Phase 9: build `/dashboard` (past applications table) and `/account` (email, plan status, delete account).

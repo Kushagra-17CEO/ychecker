@@ -16,7 +16,7 @@
 | 6 | Report Page (Teaser + Paywall) | ✅ Complete |
 | 7 | Payments (Razorpay) | ✅ Complete |
 | 8 | Email System | ✅ Complete |
-| 9 | Dashboard & Account Pages | ⬜ Not Started |
+| 9 | Dashboard & Account Pages | ✅ Complete |
 | 10 | PDF Generation | ⬜ Not Started |
 | 11 | Security Hardening | ⬜ Not Started |
 | 12 | Pre-Launch QA & Go Live | ⬜ Not Started |
@@ -110,10 +110,20 @@
 - All emails fire non-blocking (fire-and-forget with `.catch`)
 - Build passes with 0 TypeScript errors
 
+### Phase 9 — Dashboard & Account Pages ✅
+- `/dashboard` — server-rendered page fetching all applications + reports for logged-in user
+  - Table with: date, one-liner (truncated), color-coded score badge, status badge (Locked/Unlocked/Expert Pending/Processing), report link
+  - Empty state with CTA to /apply
+  - Protected route (redirects to /login if not authenticated)
+- `/account` — shows email, auth provider, purchase history with tier badges, billing contact
+  - Danger zone with "Delete My Account & All Data" button (double confirmation)
+- `DELETE /api/account/delete` — deletes payments → reports → applications (FK order) → auth user → signs out
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-16
-**Phase:** Phase 9 — Dashboard & Account Pages is next
-**Summary:** Phases 1–8 are complete, pushed, and deployed to Vercel. Next action is Phase 9: build `/dashboard` (past applications table) and `/account` (email, plan status, delete account).
+**Phase:** Phase 10 — PDF Generation is next
+**Summary:** Phases 1–9 are complete, pushed, and deployed to Vercel. Next action is Phase 10: build PDF generation with @react-pdf/renderer, upload to Supabase Storage, add download button on report page.

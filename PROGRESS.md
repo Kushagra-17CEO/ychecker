@@ -13,8 +13,8 @@
 | 3 | Landing Page | ✅ Complete |
 | 4 | Multi-Step Application Form | ✅ Complete |
 | 5 | Gemini API Integration | ✅ Complete |
-| 6 | Report Page (Teaser + Paywall) | ▶ In Progress |
-| 7 | Payments (Razorpay) | ⬜ Not Started |
+| 6 | Report Page (Teaser + Paywall) | ✅ Complete |
+| 7 | Payments (Razorpay) | ✅ Complete |
 | 8 | Email System | ⬜ Not Started |
 | 9 | Dashboard & Account Pages | ⬜ Not Started |
 | 10 | PDF Generation | ⬜ Not Started |
@@ -68,25 +68,31 @@
 - Character counter on all fields (turns red at 90%+ capacity)
 - Keyboard navigation (Enter advances on single-line inputs)
 - Auth gate modal on final submit (Sunk Cost Effect framing for logged-out users)
-- `/api/evaluate` stub route (validates auth + input, returns mock report ID)
 - `/processing` page with animated rotating messages + spinner + progress dots
 - Build passes with 0 TypeScript errors
 
 ### Phase 5 — Gemini API Integration ✅
 - Installed `@google/generative-ai` SDK
-- Replaced Phase 4 stub with full `/api/evaluate` implementation:
-  1. Verifies authentication via Supabase
-  2. Validates input with Zod, sanitizes HTML with sanitize-html
-  3. Saves application to `applications` table (status: 'processing')
-  4. Calls Gemini `gemini-2.0-flash` with system prompt + user prompt from `prompts.ts`
-  5. Uses `responseMimeType: 'application/json'` for structured output
-  6. Parses JSON response, derives aggregated strengths/weaknesses/fluff_flags
-  7. Saves report to `reports` table (is_unlocked: false)
-  8. Updates application status to 'complete'
-  9. Returns report_id to frontend
-- Error handling: invalid JSON from Gemini resets application status, returns user-friendly error
-- Score clamping: overall_score 1-100, the_secret_score 1-10
-- Pushed to GitHub, deployed to Vercel
+- Full `/api/evaluate` route: auth → validate → sanitize → save application → call Gemini `gemini-2.0-flash` → parse JSON → save report → return report_id
+- Uses `responseMimeType: 'application/json'` for structured output
+- Error handling for invalid Gemini JSON, score clamping (1-100, 1-10)
+- Build passes with 0 TypeScript errors
+
+### Phase 6 — Report Page (Teaser + Paywall) ✅
+- `GET /api/report/[id]` route — returns teaser data (obscured score, finding hook, section labels) for locked reports, full data for unlocked
+- `/report/[id]` page with two views:
+  - **Teaser (locked):** Partially obscured score (7_), Barnum Effect finding hook, blurred section cards with lock icons, verdict preview, $500k stakes anchor, dual unlock CTAs
+  - **Unlocked:** Score badge with colour coding (Red <50, Amber 50-74, Green 75+), verdict, collapsible section cards (strengths/weaknesses/fluff/rewrite), blind spots panel, The Secret Score, PDF download button
+- Build passes with 0 TypeScript errors
+
+### Phase 7 — Payments (Razorpay) ✅
+- `/pricing` page with $500k stakes header, two pricing cards (AI $19.99, Expert $79.99), MOST POPULAR badge, risk reframe line, expert process explainer
+- `POST /api/razorpay/create-order` — creates Razorpay order, saves pending payment to Supabase
+- `POST /api/razorpay/verify-payment` — HMAC-SHA256 signature verification with constant-time comparison, branches by tier (AI: unlock immediately, Expert: set expert_pending)
+- `POST /api/razorpay/webhook` — backup webhook for payment.captured events, idempotent
+- `/checkout` page with Razorpay modal integration — creates order, opens modal, verifies payment, redirects
+- `/expert-pending` confirmation page (24-48 hour turnaround messaging)
+- Razorpay checkout script added to layout.tsx (lazyOnload)
 - Build passes with 0 TypeScript errors
 
 ---
@@ -94,5 +100,5 @@
 ## Last Session Checkpoint
 
 **Date:** 2026-07-16
-**Phase:** Starting Phase 6 — Report Page (Teaser + Paywall)
-**Summary:** Phases 1–5 are complete and deployed. Gemini API integration is live. Next action is to build `/report/[id]` page with score badge, verdict, section breakdown cards, teaser screen (blurred for locked reports), and full unlocked view.
+**Phase:** Phase 8 — Email System is next
+**Summary:** Phases 1–7 are complete, pushed, and deployed to Vercel. Next action is Phase 8: build email templates with React Email, wire send calls into auth/evaluate/payment routes using Resend.

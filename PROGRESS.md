@@ -17,7 +17,7 @@
 | 7 | Payments (Razorpay) | ✅ Complete |
 | 8 | Email System | ✅ Complete |
 | 9 | Dashboard & Account Pages | ✅ Complete |
-| 10 | PDF Generation | ⬜ Not Started |
+| 10 | PDF Generation | ✅ Complete |
 | 11 | Security Hardening | ⬜ Not Started |
 | 12 | Pre-Launch QA & Go Live | ⬜ Not Started |
 | 13 | Admin Panel | ⬜ Not Started |
@@ -120,10 +120,16 @@
 - `DELETE /api/account/delete` — deletes payments → reports → applications (FK order) → auth user → signs out
 - Build passes with 0 TypeScript errors
 
+### Phase 10 — PDF Generation ✅
+- Created `src/lib/pdf-template.tsx` — full React-PDF document with Inter font, header/logo, color-coded score badge, verdict, 5 section breakdowns (strengths/weaknesses/fluff/rewrite), blind spots, The Secret Score, footer
+- Created `POST /api/generate-pdf` — renders report to PDF buffer, uploads to Supabase Storage `pdfs` bucket, saves 1-year signed URL to `report.pdf_url`, returns existing URL if already generated
+- Updated `/report/[id]` — replaced static PDF link with on-demand `PdfDownloadButton` (generates PDF if not yet created, shows spinner during generation, opens in new tab)
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
-**Date:** 2026-07-16
-**Phase:** Phase 10 — PDF Generation is next
-**Summary:** Phases 1–9 are complete, pushed, and deployed to Vercel. Next action is Phase 10: build PDF generation with @react-pdf/renderer, upload to Supabase Storage, add download button on report page.
+**Date:** 2026-07-23
+**Phase:** Phase 11 — Security Hardening is next
+**Summary:** Phases 1–10 are complete, pushed, and deployed to Vercel. Next action is Phase 11: rate limiting on /api/evaluate, verify RLS policies, security audit.

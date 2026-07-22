@@ -18,7 +18,7 @@
 | 8 | Email System | ✅ Complete |
 | 9 | Dashboard & Account Pages | ✅ Complete |
 | 10 | PDF Generation | ✅ Complete |
-| 11 | Security Hardening | ⬜ Not Started |
+| 11 | Security Hardening | ✅ Complete |
 | 12 | Pre-Launch QA & Go Live | ⬜ Not Started |
 | 13 | Admin Panel | ⬜ Not Started |
 
@@ -126,10 +126,20 @@
 - Updated `/report/[id]` — replaced static PDF link with on-demand `PdfDownloadButton` (generates PDF if not yet created, shows spinner during generation, opens in new tab)
 - Build passes with 0 TypeScript errors
 
+### Phase 11 — Security Hardening ✅
+- Rate limiting on `/api/evaluate`: 3 submissions per user per hour via `applications` table count (returns HTTP 429)
+- Input sanitization already in place (Phase 5) via `sanitizeInput()` on all fields before Gemini API call
+- Created `/privacy` page — covers data collection, usage, storage, deletion, third-party services, cookies
+- Created `/terms` page — covers service description, no-guarantee disclaimer, payments/refunds, usage limits, liability
+- Footer already links to both `/privacy` and `/terms`
+- All API keys (Gemini, Supabase service role, Razorpay secret, Resend) are server-only env vars, never in client bundle
+- Supabase RLS policies in place from Phase 1 migrations
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-23
-**Phase:** Phase 11 — Security Hardening is next
-**Summary:** Phases 1–10 are complete, pushed, and deployed to Vercel. Next action is Phase 11: rate limiting on /api/evaluate, verify RLS policies, security audit.
+**Phase:** Phase 12 — Pre-Launch QA & Go Live is next
+**Summary:** Phases 1–11 are complete, pushed, and deployed to Vercel. Next action is Phase 12: end-to-end testing, mobile testing, Razorpay live mode switch, production verification.

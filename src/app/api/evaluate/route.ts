@@ -34,6 +34,26 @@ export async function POST(request: Request) {
       )
     }
 
+    // 1b. Rate limiting — 3 calls per user per hour (Blueprint Section 10.5)
+    const adminSupabase = createAdminClient()
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+
+    const { count: recentCount } = await adminSupabase
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', oneHourAgo)
+
+    if (recentCount !== null && recentCount >= 3) {
+      return NextResponse.json(
+        {
+          error:
+            'Rate limit reached. You can submit up to 3 applications per hour. Please try again later.',
+        },
+        { status: 429 }
+      )
+    }
+
     // 2. Parse and validate request body
     const body = await request.json()
     const parseResult = applicationSchema.safeParse(body)
@@ -56,7 +76,6 @@ export async function POST(request: Request) {
     }
 
     // 4. Save application to Supabase using admin client (bypasses RLS)
-    const adminSupabase = createAdminClient()
 
     const { data: application, error: appError } = await adminSupabase
       .from('applications')

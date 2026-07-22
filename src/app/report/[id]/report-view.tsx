@@ -562,25 +562,101 @@ function UnlockedReport({
 
       {/* Actions — PDF download + new application */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 pb-8">
-        {report.pdf_url && (
-          <a
-            href={report.pdf_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary inline-flex items-center gap-2 no-underline"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Download PDF Report
-          </a>
-        )}
+        <PdfDownloadButton reportId={report.id} existingUrl={report.pdf_url} />
         <Link href="/apply" className="btn-secondary no-underline">
           Submit Another Application
         </Link>
       </div>
     </div>
+  )
+}
+
+/* ===================================================================
+ * PDF Download Button — generates on demand
+ * =================================================================== */
+function PdfDownloadButton({
+  reportId,
+  existingUrl,
+}: {
+  reportId: string
+  existingUrl?: string | null
+}) {
+  const [status, setStatus] = useState<'idle' | 'generating' | 'error'>('idle')
+  const [pdfUrl, setPdfUrl] = useState(existingUrl || '')
+
+  const handleDownload = async () => {
+    // If we already have a URL, just open it
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank')
+      return
+    }
+
+    setStatus('generating')
+
+    try {
+      const res = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: reportId }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      const data = await res.json()
+      setPdfUrl(data.pdf_url)
+      setStatus('idle')
+      window.open(data.pdf_url, '_blank')
+    } catch {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 3000)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={status === 'generating'}
+      className="btn-primary inline-flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+    >
+      {status === 'generating' ? (
+        <>
+          <svg
+            className="animate-spin"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="12" cy="12" r="10" opacity="0.25" />
+            <path d="M12 2a10 10 0 0 1 10 10" opacity="1" />
+          </svg>
+          Generating PDF…
+        </>
+      ) : status === 'error' ? (
+        'Failed — try again'
+      ) : (
+        <>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download PDF Report
+        </>
+      )}
+    </button>
   )
 }

@@ -55,7 +55,8 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('Admin login error:', err)
     return NextResponse.json(
       { error: 'Login failed.' },
       { status: 500 }

@@ -5,6 +5,19 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+/** Map Supabase auth errors to safe, user-friendly messages */
+function sanitizeAuthError(message: string): string {
+  const safeMessages: Record<string, string> = {
+    'Invalid login credentials': 'Invalid email or password.',
+    'Email not confirmed': 'Please check your email and confirm your account first.',
+    'User already registered': 'An account with this email already exists. Try signing in.',
+    'Password should be at least 6 characters': 'Password must be at least 6 characters.',
+    'Signup requires a valid password': 'Please enter a valid password.',
+    'Unable to validate email address: invalid format': 'Please enter a valid email address.',
+  }
+  return safeMessages[message] || 'Something went wrong. Please try again.'
+}
+
 export default function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
@@ -35,7 +48,7 @@ export default function LoginForm() {
         },
       })
       if (error) {
-        setError(error.message)
+        setError(sanitizeAuthError(error.message))
       } else {
         setMessage('Check your email for a confirmation link to complete your sign-up.')
       }
@@ -45,7 +58,7 @@ export default function LoginForm() {
         password,
       })
       if (error) {
-        setError(error.message)
+        setError(sanitizeAuthError(error.message))
       } else {
         router.push(redirectTo)
         router.refresh()
@@ -67,7 +80,7 @@ export default function LoginForm() {
     })
 
     if (error) {
-      setError(error.message)
+      setError(sanitizeAuthError(error.message))
       setLoading(false)
     }
     // If successful, the browser will redirect to Google — no need to setLoading(false)

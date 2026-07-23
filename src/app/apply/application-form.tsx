@@ -197,7 +197,7 @@ export default function ApplicationForm() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Submission failed (${response.status})`)
+        throw new Error(errorData.error || 'Submission failed. Please try again.')
       }
 
       const result = await response.json()

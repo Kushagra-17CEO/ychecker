@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const ADMIN_COOKIE_NAME = 'ychecker_admin_session'
 const ADMIN_COOKIE_VALUE = 'authenticated'
@@ -13,6 +14,11 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 // 24 hours
  */
 export async function POST(request: Request) {
   try {
+    // Rate limit — auth tier (strict + exponential backoff)
+    const clientIp = await getClientIp()
+    const rl = await checkRateLimit(clientIp, 'auth', '/api/admin/login')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
+
     const { password } = await request.json()
 
     if (!password) {

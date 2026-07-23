@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * GET /api/report/[id]
@@ -28,6 +29,10 @@ export async function GET(
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/report')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 2. Fetch the report
     const { data: report, error: reportError } = await supabase

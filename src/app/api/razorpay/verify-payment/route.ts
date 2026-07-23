@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email'
 import ReportReadyEmail from '@/../emails/report-ready'
 import ExpertReviewOrderedEmail from '@/../emails/expert-review-ordered'
 import AdminExpertNotifyEmail from '@/../emails/admin-expert-notify'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/razorpay/verify-payment
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/razorpay/verify-payment')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 2. Parse request
     const {

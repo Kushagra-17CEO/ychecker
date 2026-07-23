@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdmin } from '@/lib/admin-auth'
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * GET /api/admin/users
@@ -13,6 +14,11 @@ export async function GET() {
   if (!isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Rate limit — authenticated tier (admin)
+  const clientIp = await getClientIp()
+  const rl = await checkRateLimit(clientIp, 'authenticated', '/api/admin/users')
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
   const adminSupabase = createAdminClient()
 

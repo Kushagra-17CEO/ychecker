@@ -6,6 +6,7 @@ import { applicationSchema } from '@/lib/validations'
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts'
 import { sanitizeInput } from '@/lib/sanitize'
 import type { GeminiEvaluationResponse } from '@/lib/types'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/evaluate
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier (general abuse prevention)
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/evaluate')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 1b. Rate limiting — 3 calls per user per hour (Blueprint Section 10.5)
     const adminSupabase = createAdminClient()

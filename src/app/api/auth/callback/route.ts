@@ -3,12 +3,18 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { sendEmail } from '@/lib/email'
 import WelcomeEmail from '@/../emails/welcome'
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   // If "next" is in params, use it as the redirect URL
   const next = searchParams.get('next') ?? '/'
+
+  // Rate limit — auth tier (strict + exponential backoff)
+  const clientIp = await getClientIp()
+  const rl = await checkRateLimit(clientIp, 'auth', '/api/auth/callback')
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
   if (code) {
     const cookieStore = await cookies()

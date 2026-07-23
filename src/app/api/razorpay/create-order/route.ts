@@ -3,6 +3,7 @@ import Razorpay from 'razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PRICING } from '@/lib/types'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/razorpay/create-order
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/razorpay/create-order')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 2. Parse request
     const { report_id, tier } = await request.json()

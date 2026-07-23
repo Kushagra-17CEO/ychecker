@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * DELETE /api/account/delete
@@ -22,6 +23,10 @@ export async function DELETE() {
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/account/delete')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     const adminSupabase = createAdminClient()
     const userId = user.id

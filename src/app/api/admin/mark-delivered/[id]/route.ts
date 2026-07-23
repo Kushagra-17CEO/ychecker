@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdmin } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/email'
 import ExpertDeliveredEmail from '@/../emails/expert-delivered'
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/admin/mark-delivered/[id]
@@ -19,6 +20,11 @@ export async function POST(
   if (!isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Rate limit — authenticated tier (admin)
+  const clientIp = await getClientIp()
+  const rl = await checkRateLimit(clientIp, 'authenticated', '/api/admin/mark-delivered')
+  if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
   const { id: applicationId } = await params
 

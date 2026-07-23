@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/razorpay/webhook
@@ -12,6 +13,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
  */
 export async function POST(request: Request) {
   try {
+    // Rate limit — public tier
+    const clientIp = await getClientIp()
+    const rl = await checkRateLimit(clientIp, 'public', '/api/razorpay/webhook')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
+
     const body = await request.text()
     const signature = request.headers.get('x-razorpay-signature')
 

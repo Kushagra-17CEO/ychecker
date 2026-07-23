@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import ReportPDF from '@/lib/pdf-template'
 import React from 'react'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
  * POST /api/generate-pdf
@@ -28,6 +29,10 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Rate limit — authenticated tier
+    const rl = await checkRateLimit(user.id, 'authenticated', '/api/generate-pdf')
+    if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 2. Get report_id from request
     const { report_id } = await request.json()

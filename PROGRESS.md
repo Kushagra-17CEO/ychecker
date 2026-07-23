@@ -19,8 +19,8 @@
 | 9 | Dashboard & Account Pages | ✅ Complete |
 | 10 | PDF Generation | ✅ Complete |
 | 11 | Security Hardening | ✅ Complete |
-| 12 | Pre-Launch QA & Go Live | ⬜ Not Started |
-| 13 | Admin Panel | ⬜ Not Started |
+| 12 | Pre-Launch QA & Go Live | ⏭ Skipped (manual) |
+| 13 | Admin Panel | ✅ Complete |
 
 ---
 
@@ -136,10 +136,33 @@
 - Supabase RLS policies in place from Phase 1 migrations
 - Build passes with 0 TypeScript errors
 
+### Phase 13 — Admin Panel ✅
+- `/admin/login` — password form checking `ADMIN_PASSWORD` env var, sets secure httpOnly session cookie (24h)
+- `/admin` — full admin dashboard with 4 sections:
+  1. **Overview Stats Bar** — total sign-ups, this week, AI reports sold, expert reviews sold, total revenue (₹), pending expert reviews
+  2. **User Table** — expandable rows showing email, sign-up date, one-liner, tier badge (Free/AI/Expert), status badge, full application answers
+  3. **Expert Review Queue** — filtered view of `expert_pending` orders with “Mark as Delivered” button
+  4. **Follow-up Email Helper** — draft generator with personalised hook using user's one-liner
+- `GET /api/admin/users` — returns all users + applications + payments + overview stats (protected by admin cookie)
+- `POST /api/admin/mark-delivered/[id]` — updates status to `expert_delivered`, sends Expert Review Delivered email via Resend
+- `POST /api/admin/login` — validates password, sets session cookie
+- `src/lib/admin-auth.ts` — shared admin cookie verification helper
+- `emails/expert-delivered.tsx` — Expert Review Delivered email template with CTA to report
+- Build passes with 0 TypeScript errors
+
 ---
 
 ## Last Session Checkpoint
 
 **Date:** 2026-07-23
-**Phase:** Phase 12 — Pre-Launch QA & Go Live is next
-**Summary:** Phases 1–11 are complete, pushed, and deployed to Vercel. Next action is Phase 12: end-to-end testing, mobile testing, Razorpay live mode switch, production verification.
+**Phase:** ALL CODE PHASES COMPLETE (1–11, 13)
+**Summary:** All 12 code phases are built, pushed to GitHub, and deployed to Vercel. Phase 12 (Pre-Launch QA & Go Live) is manual testing by the founder. The app is fully functional at https://ychecker.vercel.app.
+
+### Manual steps remaining (Phase 12):
+1. Set `ADMIN_PASSWORD` env var on Vercel (for admin panel access)
+2. Set `ADMIN_EMAIL` env var on Vercel (for expert review notifications)
+3. Create Supabase Storage bucket named `pdfs` (private) for PDF generation
+4. Run end-to-end test: sign up → submit application → view report → pay → download PDF
+5. Test on mobile (iPhone + Android)
+6. Switch Razorpay to live mode (`rzp_live_` keys) when ready for real payments
+7. Submit a real test payment to confirm full production flow

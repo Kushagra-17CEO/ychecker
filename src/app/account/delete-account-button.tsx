@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { sanitizeApiError } from '@/lib/error-sanitizer'
 
 /**
  * Delete Account Button — Blueprint 9.3
@@ -28,7 +29,7 @@ export default function DeleteAccountButton() {
       router.push('/?deleted=true')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(sanitizeApiError(err, 'Failed to delete account. Please contact support.'))
       setStep('idle')
     }
   }

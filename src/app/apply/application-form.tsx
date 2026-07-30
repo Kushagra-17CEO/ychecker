@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { applicationSchema, stepSchemas, type ApplicationFormData } from '@/lib/validations'
 import AuthModal from '@/components/auth-modal'
+import { sanitizeApiError } from '@/lib/error-sanitizer'
 import type { User } from '@supabase/supabase-js'
 
 /* ===================================================================
@@ -204,7 +205,7 @@ export default function ApplicationForm() {
       // Navigate to processing screen, then to report
       router.push(`/processing?id=${result.report_id}`)
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setSubmitError(sanitizeApiError(err, 'Something went wrong. Please try again.'))
       setSubmitting(false)
     }
   }

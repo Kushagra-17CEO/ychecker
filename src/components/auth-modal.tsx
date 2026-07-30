@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { sanitizeAuthError } from '@/lib/error-sanitizer'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -42,7 +43,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = '/'
         },
       })
       if (error) {
-        setError(error.message)
+        setError(sanitizeAuthError(error.message))
       } else {
         // Auto sign-in after sign-up for smoother flow
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -61,7 +62,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = '/'
         password,
       })
       if (error) {
-        setError(error.message)
+        setError(sanitizeAuthError(error.message))
       } else {
         onSuccess()
       }
@@ -82,7 +83,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = '/'
     })
 
     if (error) {
-      setError(error.message)
+      setError(sanitizeAuthError(error.message))
       setLoading(false)
     }
   }

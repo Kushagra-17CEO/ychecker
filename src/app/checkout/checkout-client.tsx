@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { sanitizeApiError } from '@/lib/error-sanitizer'
 import Navbar from '@/components/navbar'
 import { PRICING } from '@/lib/types'
 
@@ -135,7 +136,7 @@ export default function CheckoutClient() {
       rzp.open()
     } catch (err) {
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong')
+      setErrorMsg(sanitizeApiError(err, 'Something went wrong. Please try again.'))
     }
   }
 

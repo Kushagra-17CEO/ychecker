@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { sanitizeApiError } from '@/lib/error-sanitizer'
 import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 import { getScoreColor, SCORE_COLORS } from '@/lib/types'
@@ -80,7 +81,7 @@ export default function ReportView({ reportId }: { reportId: string }) {
         const data = await res.json()
         setReport(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load report')
+        setError(sanitizeApiError(err, 'Failed to load report. Please try again.'))
       } finally {
         setLoading(false)
       }

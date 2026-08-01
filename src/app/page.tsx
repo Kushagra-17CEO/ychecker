@@ -1,14 +1,20 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Navbar from '@/components/navbar'
+import { Suspense } from 'react'
+import { getLandingStats } from '@/lib/landing-stats'
+import {
+  StatsStrip,
+  SuccessCarousel,
+  RejectionReality,
+  FounderQuotes,
+  HowItWorks,
+} from '@/components/landing-sections'
 import Footer from '@/components/footer'
-import { getWeeklyApplicationCount } from '@/lib/queries'
-import { HeroAnimation, StepCard, PricingCard, SocialProofCounter } from '@/components/landing-sections'
 
 export const metadata: Metadata = {
   title: 'YChecker — Find Out If Your YC Application Would Get You Rejected',
   description:
-    'Evaluated by AI trained on real YC partner criteria. No fluff. No encouragement. Just the truth. Get a structured report judging your application exactly the way a YC partner would.',
+    'Most YC applications get rejected in under 60 seconds. Find out if yours is one of them. Evaluated on the same criteria YC partners use.',
   keywords: [
     'Y Combinator',
     'YC application',
@@ -19,297 +25,231 @@ export const metadata: Metadata = {
   ],
 }
 
-export default async function Home() {
-  const weeklyCount = await getWeeklyApplicationCount()
+/* ------------------------------------------------------------------
+ * Stats Strip Server Wrapper — fetches live data, passes to client
+ * ------------------------------------------------------------------ */
+async function StatsStripServer() {
+  const stats = await getLandingStats()
+  return <StatsStrip stats={stats} />
+}
 
+/* ------------------------------------------------------------------
+ * LANDING PAGE — Blueprint: YChecker_Landing_Page_Blueprint.md
+ * Build order: Navbar → Hero → Stats → Carousel → Reality → Quotes
+ *              → How It Works → Bottom CTA → Footer
+ * ------------------------------------------------------------------ */
+export default function Home() {
   return (
     <>
-      <Navbar />
-      <main className="flex-1">
-        {/* ===== HERO SECTION ===== */}
-        <section className="relative overflow-hidden">
-          {/* Subtle background accent */}
-          <div
-            className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-            style={{ backgroundColor: '#FF6B35' }}
-          />
-
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 md:pt-28 md:pb-24 text-center">
-            {/* Hero headline — loss-framed per blueprint psychology note */}
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6"
-              style={{ color: '#111111' }}
+      {/* ===== 1. NAVBAR ===== */}
+      <nav
+        className="w-full sticky top-0 z-40 bg-white"
+        style={{ borderBottom: '1px solid #DDDDDD' }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="no-underline">
+              <span
+                className="text-2xl"
+                style={{ fontWeight: 900, color: '#FF6B35' }}
+              >
+                YChecker
+              </span>
+            </Link>
+            <Link
+              href="/apply"
+              className="no-underline text-white font-semibold"
+              style={{
+                backgroundColor: '#FF6B35',
+                padding: '12px 24px',
+                borderRadius: 8,
+                fontSize: 14,
+                transition: 'background-color 150ms',
+              }}
             >
-              Find Out If Your YC Application{' '}
-              <span style={{ color: '#FF6B35' }}>Would Get You Rejected</span>
+              Check My Application
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <main className="flex-1">
+        {/* ===== 2. HERO ===== */}
+        <section style={{ paddingTop: 120, paddingBottom: 100 }}>
+          <div className="mx-auto text-center px-4" style={{ maxWidth: 800 }}>
+            {/* Eyebrow */}
+            <div className="flex flex-col items-center mb-6">
+              <div
+                className="mb-3"
+                style={{ width: 24, height: 1, backgroundColor: '#FF6B35' }}
+              />
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#FF6B35',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                }}
+              >
+                YCHECKER
+              </span>
+            </div>
+
+            {/* Main headline */}
+            <h1
+              style={{
+                fontWeight: 900,
+                color: '#111111',
+                lineHeight: 1.1,
+                margin: 0,
+              }}
+              className="text-[44px] sm:text-[56px] md:text-[72px]"
+            >
+              Most YC applications
+              <br />
+              get rejected in under
+              <br />
+              60 seconds.
             </h1>
 
             {/* Sub-headline */}
             <p
-              className="text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed"
-              style={{ color: '#666666' }}
+              className="text-lg md:text-[22px]"
+              style={{
+                color: '#666666',
+                marginTop: 24,
+                fontWeight: 400,
+              }}
             >
-              Evaluated by AI trained on real YC partner criteria. No fluff. No encouragement. Just the truth.
+              Find out if yours is one of them.
             </p>
 
-            {/* Social proof counter — real, live count from database */}
-            <SocialProofCounter count={weeklyCount} />
-
-            {/* CTA */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* CTA button */}
+            <div style={{ marginTop: 32 }}>
               <Link
                 href="/apply"
-                className="btn-primary text-lg px-8 py-4 no-underline inline-flex items-center gap-2"
+                className="inline-block no-underline text-white"
+                style={{
+                  backgroundColor: '#FF6B35',
+                  padding: '16px 40px',
+                  borderRadius: 8,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  transition: 'background-color 150ms',
+                }}
               >
                 Check My Application
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/pricing"
-                className="btn-secondary text-base px-6 py-3 no-underline"
-              >
-                See Pricing
               </Link>
             </div>
 
-            {/* Animated accent */}
-            <HeroAnimation />
+            {/* Below CTA */}
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 20 }}>
+              Free to start. No card required.
+            </p>
           </div>
         </section>
 
-        {/* ===== 3-STEP EXPLAINER ===== */}
-        <section
-          className="py-16 md:py-24"
-          style={{ backgroundColor: '#FAFAFA' }}
-        >
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2
-              className="text-2xl sm:text-3xl font-semibold text-center mb-4"
-              style={{ color: '#FF6B35' }}
+        {/* ===== 3. LIVE STATS STRIP ===== */}
+        <Suspense
+          fallback={
+            <div
+              style={{
+                borderTop: '1px solid #DDDDDD',
+                borderBottom: '1px solid #DDDDDD',
+                padding: '40px 0',
+              }}
             >
-              How It Works
-            </h2>
-            <p
-              className="text-base text-center max-w-xl mx-auto mb-12"
-              style={{ color: '#666666' }}
-            >
-              Three steps between you and the brutal truth about your application.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <StepCard
-                number={1}
-                title="Paste Your Answers"
-                description="Fill in the 5 hardest YC application questions — one-liner, problem, traction, team, and competitors."
-                icon="edit"
-              />
-              <StepCard
-                number={2}
-                title="Evaluated Like a YC Partner"
-                description="Our AI scores every answer on clarity, traction, team risk, market size, and unique insight — exactly like a real partner would."
-                icon="brain"
-              />
-              <StepCard
-                number={3}
-                title="Get Brutal, Actionable Feedback"
-                description="Receive a structured report with scores, strengths, weaknesses, fluff flags, blind spots, and specific rewrite suggestions."
-                icon="report"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ===== WHAT YOU GET ===== */}
-        <section className="py-16 md:py-24">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2
-              className="text-2xl sm:text-3xl font-semibold text-center mb-4"
-              style={{ color: '#FF6B35' }}
-            >
-              What Your Report Includes
-            </h2>
-            <p
-              className="text-base text-center max-w-xl mx-auto mb-12"
-              style={{ color: '#666666' }}
-            >
-              Every weakness a YC partner would catch — before they see your application.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Overall Score',
-                  desc: 'A single number from 1–100 telling you exactly where you stand.',
-                  emoji: '🎯',
-                },
-                {
-                  title: '5-Section Breakdown',
-                  desc: 'Each answer scored on clarity, traction, and specificity with per-section feedback.',
-                  emoji: '📊',
-                },
-                {
-                  title: 'Fluff Detection',
-                  desc: 'Every buzzword, cliché, and vague phrase flagged — the exact phrases YC hates.',
-                  emoji: '🚩',
-                },
-                {
-                  title: 'Blind Spot Analysis',
-                  desc: 'Risks and gaps you haven\'t considered that a YC partner would immediately notice.',
-                  emoji: '🔍',
-                },
-                {
-                  title: 'Rewrite Suggestions',
-                  desc: 'Specific, actionable rewrites for each answer — not generic advice.',
-                  emoji: '✏️',
-                },
-                {
-                  title: 'The Secret Score',
-                  desc: 'Do you have a non-obvious insight that competitors are missing? We\'ll tell you.',
-                  emoji: '💡',
-                },
-              ].map((item) => (
-                <div key={item.title} className="card group hover:shadow-md transition-shadow duration-200">
-                  <div className="text-3xl mb-3">{item.emoji}</div>
-                  <h3
-                    className="text-lg font-semibold mb-2"
-                    style={{ color: '#111111' }}
-                  >
-                    {item.title}
-                  </h3>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: '#666666' }}
-                  >
-                    {item.desc}
-                  </p>
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+                  {['Applications Evaluated', 'Critical Weaknesses Found', 'Fluff Flags Detected'].map(
+                    (label) => (
+                      <div key={label}>
+                        <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>—</div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: '#666666',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                            marginTop: 4,
+                          }}
+                        >
+                          {label}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </section>
-
-        {/* ===== PRICING PREVIEW ===== */}
-        <section
-          className="py-16 md:py-24"
-          style={{ backgroundColor: '#FAFAFA' }}
+          }
         >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Stakes header — anchoring $500k per blueprint */}
-            <div className="text-center mb-12">
-              <h2
-                className="text-2xl sm:text-3xl font-bold mb-3"
-                style={{ color: '#111111' }}
-              >
-                YC gives accepted startups{' '}
-                <span style={{ color: '#FF6B35' }}>$500,000</span>.
-              </h2>
-              <p
-                className="text-base max-w-lg mx-auto"
-                style={{ color: '#666666' }}
-              >
-                Don&apos;t risk it on a weak application. Know exactly where you stand before you hit Submit.
-              </p>
-            </div>
+          <StatsStripServer />
+        </Suspense>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PricingCard
-                tier="ai"
-                title="AI Report"
-                price="$19.99"
-                turnaround="Instant"
-                reviewer="Gemini AI (trained on YC criteria)"
-                features={[
-                  'Full 5-section breakdown',
-                  'Blind spot detection',
-                  'The Secret Score',
-                  'Downloadable PDF',
-                  'Personalised rewrite suggestions',
-                ]}
-                ctaText="Get My AI Report — $19.99"
-                ctaHref="/apply"
-              />
-              <PricingCard
-                tier="expert"
-                title="Expert Review"
-                price="$79.99"
-                turnaround="Within 24–48 hours"
-                reviewer="AI + human expert review"
-                features={[
-                  'Full 5-section breakdown',
-                  'Blind spot detection',
-                  'The Secret Score',
-                  'Downloadable PDF',
-                  'Deeper, human-checked rewrite suggestions',
-                  'Expert commentary on each answer',
-                  'Delivered to your email',
-                ]}
-                ctaText="Get Expert Review — $79.99"
-                ctaHref="/apply"
-                highlighted
-              />
-            </div>
+        {/* ===== 4. SUCCESS STORIES CAROUSEL ===== */}
+        <SuccessCarousel />
 
-            {/* Risk reframe — below Expert Review card */}
-            <p
-              className="text-sm text-center mt-6 max-w-lg mx-auto"
-              style={{ color: '#666666' }}
-            >
-              $79.99 is 0.016% of what YC gives you. If this report helps you get in,
-              it&apos;s the highest-ROI $79.99 you&apos;ll ever spend.
-            </p>
-          </div>
-        </section>
+        {/* ===== 5. WHAT REJECTION LOOKS LIKE ===== */}
+        <RejectionReality />
 
-        {/* ===== FINAL CTA ===== */}
-        <section className="py-16 md:py-24">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        {/* ===== 6. FOUNDER WISDOM QUOTES ===== */}
+        <FounderQuotes />
+
+        {/* ===== 7. HOW IT WORKS ===== */}
+        <HowItWorks />
+
+        {/* ===== 8. BOTTOM CTA BAND ===== */}
+        <section
+          style={{
+            borderTop: '1px solid #DDDDDD',
+            padding: '80px 0',
+          }}
+        >
+          <div
+            className="mx-auto text-center px-4"
+            style={{ maxWidth: 600 }}
+          >
             <h2
-              className="text-3xl sm:text-4xl font-bold mb-4"
-              style={{ color: '#111111' }}
+              className="text-[28px] md:text-[40px]"
+              style={{
+                fontWeight: 700,
+                color: '#111111',
+                lineHeight: 1.2,
+              }}
             >
-              Stop guessing.{' '}
-              <span style={{ color: '#FF6B35' }}>Start knowing.</span>
+              Your application is either strong
+              <br />
+              or it isn&apos;t. Find out now.
             </h2>
-            <p
-              className="text-lg mb-8"
-              style={{ color: '#666666' }}
-            >
-              Your application is either ready or it isn&apos;t. Find out in 60 seconds.
-            </p>
-            <Link
-              href="/apply"
-              className="btn-primary text-lg px-10 py-4 no-underline inline-flex items-center gap-2"
-            >
-              Check My Application
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+
+            <div style={{ marginTop: 32 }}>
+              <Link
+                href="/apply"
+                className="inline-block no-underline text-white"
+                style={{
+                  backgroundColor: '#FF6B35',
+                  padding: '16px 40px',
+                  borderRadius: 8,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  transition: 'background-color 150ms',
+                }}
               >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </Link>
+                Check My Application
+              </Link>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#666666', marginTop: 16 }}>
+              Free to start. Results in under 60 seconds.
+            </p>
           </div>
         </section>
       </main>
+
+      {/* ===== 9. FOOTER ===== */}
       <Footer />
     </>
   )

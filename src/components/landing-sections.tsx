@@ -1,274 +1,469 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 
 /* ===================================================================
- * SocialProofCounter — Live application count from the database
- * Shows "X applications evaluated this week" — real data only.
- * Animated count-up effect for engagement.
+ * Shared fade-in animation variant for sections
  * =================================================================== */
-export function SocialProofCounter({ count }: { count: number }) {
-  const [displayed, setDisplayed] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const hasAnimated = useRef(false)
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+}
+
+/* ===================================================================
+ * Section Label — orange uppercase label with optional centered line
+ * =================================================================== */
+function SectionLabel({ text, withLine }: { text: string; withLine?: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      {withLine && (
+        <div
+          className="mb-3"
+          style={{ width: 24, height: 1, backgroundColor: '#FF6B35' }}
+        />
+      )}
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: '#FF6B35',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.12em',
+        }}
+      >
+        {text}
+      </span>
+    </div>
+  )
+}
+
+/* ===================================================================
+ * SUCCESS STORIES CAROUSEL — Section 4
+ * Auto-scrolling, pauses on hover, infinite loop
+ * =================================================================== */
+const companies = [
+  { name: 'Airbnb', outcome: 'Started in W09. Went public in 2020.', badge: '$100B+ valuation' },
+  { name: 'Stripe', outcome: 'Started in S09. Now the internet\'s payments backbone.', badge: '$107B valuation' },
+  { name: 'Dropbox', outcome: 'Started in S07. Biggest tech IPO of 2018.', badge: '$9B valuation' },
+  { name: 'DoorDash', outcome: 'Started in S13. Went public in 2020.', badge: '$39B valuation' },
+  { name: 'Coinbase', outcome: 'Started in S12. Went public in 2021.', badge: '$86B valuation' },
+  { name: 'OpenAI', outcome: 'Founded as YC Research in 2015.', badge: '$500B+ valuation' },
+  { name: 'GitLab', outcome: 'Started in S14. Went public in 2021.', badge: '$11B valuation' },
+  { name: 'Reddit', outcome: 'Started in S05. Went public in 2024.', badge: '$6.4B valuation' },
+]
+
+export function SuccessCarousel() {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const animRef = useRef<number>(0)
+  const posRef = useRef(0)
+  const pausedRef = useRef(false)
+
+  // Duplicate cards for seamless infinite loop
+  const cards = [...companies, ...companies]
+  const cardWidth = 280 + 24 // card width + gap
+  const totalWidth = companies.length * cardWidth
 
   useEffect(() => {
-    if (count === 0 || hasAnimated.current) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true
-          // Animate the count up
-          const duration = 1200 // ms
-          const start = performance.now()
-          const animate = (now: number) => {
-            const elapsed = now - start
-            const progress = Math.min(elapsed / duration, 1)
-            // Ease-out curve
-            const eased = 1 - Math.pow(1 - progress, 3)
-            setDisplayed(Math.round(eased * count))
-            if (progress < 1) requestAnimationFrame(animate)
-          }
-          requestAnimationFrame(animate)
+    const animate = () => {
+      if (!pausedRef.current) {
+        posRef.current -= 0.5
+        if (Math.abs(posRef.current) >= totalWidth) {
+          posRef.current = 0
         }
-      },
-      { threshold: 0.5 }
-    )
-
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [count])
-
-  // Only show when we have real data
-  if (count === 0) return null
+        if (trackRef.current) {
+          trackRef.current.style.transform = `translateX(${posRef.current}px)`
+        }
+      }
+      animRef.current = requestAnimationFrame(animate)
+    }
+    animRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animRef.current)
+  }, [totalWidth])
 
   return (
-    <div
-      ref={ref}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
-      style={{
-        backgroundColor: '#FFF0E8',
-        color: '#FF6B35',
-        border: '1px solid #FFD4BC',
-      }}
+    <motion.section
+      className="py-16 md:py-24"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={fadeInUp}
     >
-      <span className="relative flex h-2 w-2">
-        <span
-          className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
-          style={{ backgroundColor: '#FF6B35' }}
-        />
-        <span
-          className="relative inline-flex rounded-full h-2 w-2"
-          style={{ backgroundColor: '#FF6B35' }}
-        />
-      </span>
-      <span>
-        <strong>{displayed.toLocaleString()}</strong> applications evaluated this week
-      </span>
-    </div>
-  )
-}
+      <div className="text-center mb-12">
+        <SectionLabel text="WHERE YOUR APPLICATION COULD TAKE YOU" />
+        <h2
+          className="mt-4"
+          style={{ fontSize: 36, fontWeight: 700, color: '#111111' }}
+        >
+          These started as applications.
+        </h2>
+      </div>
 
-/* ===================================================================
- * StepCard — Single card in the 3-step explainer section
- * =================================================================== */
-interface StepCardProps {
-  number: number
-  title: string
-  description: string
-  icon: 'edit' | 'brain' | 'report'
-}
-
-const stepIcons = {
-  edit: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-    </svg>
-  ),
-  brain: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.5 2A5.5 5.5 0 0 0 4 7.5c0 1.5.5 2.9 1.4 4L12 22l6.6-10.5c.9-1.1 1.4-2.5 1.4-4A5.5 5.5 0 0 0 14.5 2 5.5 5.5 0 0 0 12 2.8 5.5 5.5 0 0 0 9.5 2z" />
-      <circle cx="12" cy="8" r="2" />
-    </svg>
-  ),
-  report: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <polyline points="10 9 9 9 8 9" />
-    </svg>
-  ),
-}
-
-export function StepCard({ number, title, description, icon }: StepCardProps) {
-  return (
-    <div className="card text-center group hover:shadow-md transition-shadow duration-200">
-      {/* Step number badge */}
       <div
-        className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4 text-white text-lg font-bold"
-        style={{ backgroundColor: '#FF6B35' }}
+        className="overflow-hidden"
+        onMouseEnter={() => (pausedRef.current = true)}
+        onMouseLeave={() => (pausedRef.current = false)}
       >
-        {number}
+        <div
+          ref={trackRef}
+          className="flex"
+          style={{ gap: 24, willChange: 'transform' }}
+        >
+          {cards.map((c, i) => (
+            <div
+              key={`${c.name}-${i}`}
+              className="flex-shrink-0 transition-shadow duration-150"
+              style={{
+                width: 280,
+                padding: 32,
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #DDDDDD',
+                borderRadius: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#111111', marginBottom: 8 }}>
+                {c.name}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 400, color: '#666666', marginBottom: 16, lineHeight: 1.5 }}>
+                {c.outcome}
+              </div>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  borderRadius: 100,
+                  backgroundColor: '#FFF0E8',
+                  color: '#FF6B35',
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                {c.badge}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-
-      {/* Icon */}
-      <div className="flex justify-center mb-3">
-        {stepIcons[icon]}
-      </div>
-
-      {/* Content */}
-      <h3
-        className="text-lg font-semibold mb-2"
-        style={{ color: '#111111' }}
-      >
-        {title}
-      </h3>
-      <p
-        className="text-sm leading-relaxed"
-        style={{ color: '#666666' }}
-      >
-        {description}
-      </p>
-    </div>
+    </motion.section>
   )
 }
 
 /* ===================================================================
- * PricingCard — AI Report or Expert Review card
+ * REJECTION REALITY CARDS — Section 5
  * =================================================================== */
-interface PricingCardProps {
-  tier: 'ai' | 'expert'
-  title: string
-  price: string
-  turnaround: string
-  reviewer: string
-  features: string[]
-  ctaText: string
-  ctaHref: string
-  highlighted?: boolean
+const rejectionCards = [
+  {
+    label: 'THE FLUFF PROBLEM',
+    body: 'Most applications written with ChatGPT sound identical. Vague language. No numbers. No specificity. Partners stop reading after the first paragraph.',
+  },
+  {
+    label: 'THE BLIND SPOT PROBLEM',
+    body: 'Founders are too close to their own idea. They explain what it does, not why it wins. YC partners spot this in seconds.',
+  },
+  {
+    label: 'THE TRACTION PROBLEM',
+    body: "Saying 'we plan to reach 10,000 users' is not traction. One paying customer who renewed is. Most applications confuse ambition with evidence.",
+  },
+]
+
+export function RejectionReality() {
+  return (
+    <motion.section
+      className="py-16 md:py-24"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={fadeInUp}
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <SectionLabel text="THE REALITY" />
+          <h2
+            className="mt-4 mx-auto"
+            style={{ fontSize: 40, fontWeight: 700, color: '#111111', maxWidth: 640, lineHeight: 1.2 }}
+          >
+            YC rejects 98% of applications.
+            <br className="hidden sm:block" />
+            Here&apos;s why most of them deserved it.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {rejectionCards.map((card) => (
+            <div
+              key={card.label}
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #DDDDDD',
+                borderRadius: 8,
+                padding: 28,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#FF6B35',
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.08em',
+                  marginBottom: 12,
+                }}
+              >
+                {card.label}
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 400, color: '#666666', lineHeight: 1.7, margin: 0 }}>
+                {card.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  )
 }
 
-export function PricingCard({
-  title,
-  price,
-  turnaround,
-  reviewer,
-  features,
-  ctaText,
-  ctaHref,
-  highlighted = false,
-}: PricingCardProps) {
+/* ===================================================================
+ * FOUNDER WISDOM QUOTES — Section 6
+ * =================================================================== */
+const quotes = [
+  {
+    text: 'The most important thing is to be very clear about what you do and why. Vague is the enemy of funded.',
+    attribution: 'Paul Graham, Y Combinator',
+  },
+  {
+    text: 'Ideas are easy. Execution is everything. A strong application shows you already know the difference.',
+    attribution: 'John Doerr, Kleiner Perkins',
+  },
+  {
+    text: "The founders who get in aren't the ones with the best ideas. They're the ones who understand their idea more deeply than anyone else in the room.",
+    attribution: 'Sam Altman, OpenAI / Y Combinator',
+  },
+]
+
+export function FounderQuotes() {
+  return (
+    <motion.section
+      className="py-16 md:py-24"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={fadeInUp}
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <SectionLabel text="IN THEIR WORDS" />
+          <h2
+            className="mt-4 mx-auto"
+            style={{ fontSize: 36, fontWeight: 700, color: '#111111', maxWidth: 560 }}
+          >
+            What the people who built billion-dollar companies say about being prepared.
+          </h2>
+        </div>
+
+        <div className="flex flex-col gap-8 mx-auto" style={{ maxWidth: 680 }}>
+          {quotes.map((q) => (
+            <div
+              key={q.attribution}
+              style={{
+                borderLeft: '3px solid #FF6B35',
+                paddingLeft: 24,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 20,
+                  fontWeight: 400,
+                  color: '#111111',
+                  lineHeight: 1.6,
+                  fontStyle: 'italic',
+                  margin: 0,
+                }}
+              >
+                &ldquo;{q.text}&rdquo;
+              </p>
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#666666',
+                  marginTop: 16,
+                  fontStyle: 'normal',
+                }}
+              >
+                — {q.attribution}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  )
+}
+
+/* ===================================================================
+ * HOW IT WORKS — Section 7
+ * =================================================================== */
+const steps = [
+  {
+    number: '1',
+    title: 'Paste Your Answers',
+    body: 'Copy your YC application answers directly into our form. Five questions. Takes under ten minutes.',
+  },
+  {
+    number: '2',
+    title: 'Get Evaluated Like a Partner Would',
+    body: 'Our AI evaluates every answer on the same criteria YC partners use — clarity, traction, team risk, market size, and unique insight.',
+  },
+  {
+    number: '3',
+    title: 'Know Exactly What to Fix',
+    body: 'You receive a scored report with specific weaknesses, fluff flags, blind spots you missed, and rewrite suggestions for every section.',
+  },
+]
+
+export function HowItWorks() {
+  return (
+    <motion.section
+      className="py-16 md:py-24"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={fadeInUp}
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <SectionLabel text="THE PROCESS" />
+          <h2
+            className="mt-4"
+            style={{ fontSize: 36, fontWeight: 700, color: '#111111' }}
+          >
+            Three steps. Ten minutes.
+            <br />
+            The truth about your application.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map((step) => (
+            <div key={step.number} className="text-center md:text-left">
+              <div style={{ fontSize: 48, fontWeight: 900, color: '#FF6B35' }}>
+                {step.number}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: '#111111', marginTop: 12 }}>
+                {step.title}
+              </h3>
+              <p style={{ fontSize: 15, fontWeight: 400, color: '#666666', lineHeight: 1.6, marginTop: 8 }}>
+                {step.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <a
+            href="/apply"
+            className="inline-block no-underline text-white font-semibold"
+            style={{
+              backgroundColor: '#FF6B35',
+              padding: '16px 40px',
+              borderRadius: 8,
+              fontSize: 18,
+              transition: 'background-color 150ms',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#E55A2B'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#FF6B35'
+            }}
+          >
+            Check My Application
+          </a>
+          <p style={{ fontSize: 13, color: '#666666', marginTop: 16 }}>
+            Evaluated. Scored. Specific. Not encouragement.
+          </p>
+        </div>
+      </div>
+    </motion.section>
+  )
+}
+
+/* ===================================================================
+ * STATS STRIP — Section 3 (client wrapper for Suspense data)
+ * =================================================================== */
+export function StatsStrip({
+  stats,
+}: {
+  stats: { applicationsEvaluated: number; criticalWeaknesses: number; fluffFlagsDetected: number }
+}) {
   return (
     <div
-      className="card relative flex flex-col"
       style={{
-        border: highlighted
-          ? '2px solid #FF6B35'
-          : '1px solid #DDDDDD',
+        borderTop: '1px solid #DDDDDD',
+        borderBottom: '1px solid #DDDDDD',
+        padding: '40px 0',
       }}
     >
-      {/* Popular badge for Expert Review */}
-      {highlighted && (
-        <div
-          className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white"
-          style={{ backgroundColor: '#FF6B35' }}
-        >
-          MOST POPULAR
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="mb-6">
-        <h3
-          className="text-xl font-bold mb-1"
-          style={{ color: '#111111' }}
-        >
-          {title}
-        </h3>
-        <div className="flex items-baseline gap-1 mb-2">
-          <span
-            className="text-3xl font-black"
-            style={{ color: '#FF6B35' }}
-          >
-            {price}
-          </span>
-          <span
-            className="text-sm"
-            style={{ color: '#666666' }}
-          >
-            one-time
-          </span>
-        </div>
-        <p
-          className="text-sm"
-          style={{ color: '#666666' }}
-        >
-          {turnaround} · {reviewer}
-        </p>
-      </div>
-
-      {/* Features */}
-      <ul className="space-y-3 mb-8 flex-1">
-        {features.map((feature) => (
-          <li
-            key={feature}
-            className="flex items-start gap-2 text-sm"
-            style={{ color: '#111111' }}
-          >
-            <svg
-              className="flex-shrink-0 mt-0.5"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#1A7F4B"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
+              {stats.applicationsEvaluated.toLocaleString() || '—'}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#666666',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                marginTop: 4,
+              }}
             >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            {feature}
-          </li>
-        ))}
-      </ul>
-
-      {/* CTA */}
-      <Link
-        href={ctaHref}
-        className={`block text-center no-underline py-3 px-6 rounded-lg font-semibold text-base transition-colors duration-150 ${
-          highlighted
-            ? 'btn-primary'
-            : 'btn-secondary'
-        }`}
-      >
-        {ctaText}
-      </Link>
-    </div>
-  )
-}
-
-/* ===================================================================
- * HeroAnimation — Subtle floating accent shapes behind hero
- * =================================================================== */
-export function HeroAnimation() {
-  return (
-    <div className="relative mt-12 flex justify-center" aria-hidden="true">
-      {/* Animated underline accent */}
-      <div className="relative">
-        <div
-          className="h-1 rounded-full animate-pulse"
-          style={{
-            backgroundColor: '#FF6B35',
-            width: '120px',
-            opacity: 0.4,
-          }}
-        />
+              Applications Evaluated
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
+              {stats.criticalWeaknesses.toLocaleString() || '—'}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#666666',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                marginTop: 4,
+              }}
+            >
+              Critical Weaknesses Found
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
+              {stats.fluffFlagsDetected.toLocaleString() || '—'}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#666666',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                marginTop: 4,
+              }}
+            >
+              Fluff Flags Detected
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -56,6 +56,11 @@ interface ReportResponse {
 const SECTION_LABELS: Record<string, string> = {
   one_liner: 'One-Liner',
   problem: 'Problem & Solution',
+  progress: 'How Far Along Are You?',
+  why_this_idea: 'Why Did You Pick This Idea?',
+  unique_insight: 'Your Unique Insight',
+  revenue: 'Revenue Model',
+  // Old keys for backward compatibility with existing reports
   traction: 'Traction & Metrics',
   team: 'Team & Founder-Market Fit',
   competitors: 'Competitor Landscape',

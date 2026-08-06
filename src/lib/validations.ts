@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * Zod validation schemas for YChecker
  * Used on both client-side (React Hook Form) and server-side (API routes)
- * See Blueprint Section 10.4 for max character limits
+ * 6-question form per YChecker_Form_Blueprint.md
  */
 
 // Individual field schemas
@@ -17,20 +17,25 @@ export const problemSchema = z
   .min(1, 'Problem & Solution is required')
   .max(5000, 'Problem & Solution must be 5,000 characters or fewer')
 
-export const tractionSchema = z
+export const progressSchema = z
   .string()
-  .min(1, 'Traction & Metrics is required')
-  .max(5000, 'Traction & Metrics must be 5,000 characters or fewer')
+  .min(1, 'Progress is required')
+  .max(5000, 'Progress must be 5,000 characters or fewer')
 
-export const teamSchema = z
+export const whyThisIdeaSchema = z
   .string()
-  .min(1, 'Team & Founder-Market Fit is required')
-  .max(5000, 'Team & Founder-Market Fit must be 5,000 characters or fewer')
+  .min(1, 'This field is required')
+  .max(5000, 'Response must be 5,000 characters or fewer')
 
-export const competitorsSchema = z
+export const uniqueInsightSchema = z
   .string()
-  .min(1, 'Competitor Landscape is required')
-  .max(5000, 'Competitor Landscape must be 5,000 characters or fewer')
+  .min(1, 'This field is required')
+  .max(5000, 'Response must be 5,000 characters or fewer')
+
+export const revenueSchema = z
+  .string()
+  .min(1, 'Revenue model is required')
+  .max(5000, 'Response must be 5,000 characters or fewer')
 
 // Step-by-step schemas for the multi-step form
 export const step1Schema = z.object({
@@ -42,24 +47,29 @@ export const step2Schema = z.object({
 })
 
 export const step3Schema = z.object({
-  traction: tractionSchema,
+  progress: progressSchema,
 })
 
 export const step4Schema = z.object({
-  team: teamSchema,
+  why_this_idea: whyThisIdeaSchema,
 })
 
 export const step5Schema = z.object({
-  competitors: competitorsSchema,
+  unique_insight: uniqueInsightSchema,
 })
 
-// Full application schema (all 5 fields)
+export const step6Schema = z.object({
+  revenue: revenueSchema,
+})
+
+// Full application schema (all 6 fields)
 export const applicationSchema = z.object({
   one_liner: oneLinerSchema,
   problem: problemSchema,
-  traction: tractionSchema,
-  team: teamSchema,
-  competitors: competitorsSchema,
+  progress: progressSchema,
+  why_this_idea: whyThisIdeaSchema,
+  unique_insight: uniqueInsightSchema,
+  revenue: revenueSchema,
 })
 
 export type ApplicationFormData = z.infer<typeof applicationSchema>
@@ -71,4 +81,5 @@ export const stepSchemas = [
   step3Schema,
   step4Schema,
   step5Schema,
+  step6Schema,
 ]

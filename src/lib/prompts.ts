@@ -1,7 +1,7 @@
 /**
  * YChecker AI Evaluation Prompts
  * Stored as constants — referenced by /api/evaluate route
- * See Blueprint Section 5 for full specification
+ * 6-question form per YChecker_Form_Blueprint.md
  */
 
 export const SYSTEM_PROMPT = `You are a Y Combinator partner with 10 years of experience evaluating startup applications.
@@ -15,10 +15,11 @@ EVALUATION CRITERIA — score each dimension internally from 1–10:
 1. CLARITY — Is every sentence direct and specific? Punish vague language and buzzwords.
 2. TRACTION — Do they lead with real numbers? Revenue, DAUs, LOIs? Penalise hypothesis-only answers heavily.
 3. TEAM RISK — Can this team actually build it? Is there a technical co-founder? Do they have domain expertise?
-4. DEMAND RISK — Is there real evidence people want this, or is it an assumption?
-5. MARKET RISK — Can this realistically become a billion-dollar company? Is the market large enough?
-6. THE SECRET — Does the founder have a non-obvious insight that competitors are missing?
-7. FLUFF DETECTION — Flag every buzzword, cliché, or vague phrase. Examples: "disruptive", "synergistic", "ecosystem", "leverage", "at scale", "paradigm shift".
+4. REVENUE CLARITY — Is there a specific, believable path to revenue? Does the founder know who pays and why? Penalise vague monetisation plans heavily.
+5. DEMAND RISK — Is there real evidence people want this, or is it an assumption?
+6. MARKET RISK — Can this realistically become a billion-dollar company? Is the market large enough?
+7. THE SECRET — Does the founder have a non-obvious insight that competitors are missing?
+8. FLUFF DETECTION — Flag every buzzword, cliché, or vague phrase. Examples: "disruptive", "synergistic", "ecosystem", "leverage", "at scale", "paradigm shift".
 
 OUTPUT FORMAT:
 You must respond ONLY with valid JSON.
@@ -29,9 +30,10 @@ Use exactly the schema specified in the user message.`
 export function buildUserPrompt(answers: {
   one_liner: string
   problem: string
-  traction: string
-  team: string
-  competitors: string
+  progress: string
+  why_this_idea: string
+  unique_insight: string
+  revenue: string
 }): string {
   return `Evaluate this YC application. Return ONLY the following JSON. No other text.
 
@@ -53,21 +55,28 @@ export function buildUserPrompt(answers: {
       "fluff_flags": ["<exact phrase from their answer>"],
       "rewrite_suggestion": "<specific, actionable rewrite of this section>"
     },
-    "traction": {
+    "progress": {
       "score": <integer 1-10>,
       "strengths": ["<string>", "<string>"],
       "weaknesses": ["<string>", "<string>"],
       "fluff_flags": ["<exact phrase from their answer>"],
       "rewrite_suggestion": "<specific, actionable rewrite of this section>"
     },
-    "team": {
+    "why_this_idea": {
       "score": <integer 1-10>,
       "strengths": ["<string>", "<string>"],
       "weaknesses": ["<string>", "<string>"],
       "fluff_flags": ["<exact phrase from their answer>"],
       "rewrite_suggestion": "<specific, actionable rewrite of this section>"
     },
-    "competitors": {
+    "unique_insight": {
+      "score": <integer 1-10>,
+      "strengths": ["<string>", "<string>"],
+      "weaknesses": ["<string>", "<string>"],
+      "fluff_flags": ["<exact phrase from their answer>"],
+      "rewrite_suggestion": "<specific, actionable rewrite of this section>"
+    },
+    "revenue": {
       "score": <integer 1-10>,
       "strengths": ["<string>", "<string>"],
       "weaknesses": ["<string>", "<string>"],
@@ -92,12 +101,15 @@ ${answers.one_liner}
 PROBLEM & SOLUTION:
 ${answers.problem}
 
-TRACTION & METRICS:
-${answers.traction}
+HOW FAR ALONG ARE YOU:
+${answers.progress}
 
-TEAM & FOUNDER-MARKET FIT:
-${answers.team}
+WHY DID YOU PICK THIS IDEA:
+${answers.why_this_idea}
 
-COMPETITOR LANDSCAPE:
-${answers.competitors}`
+UNIQUE INSIGHT:
+${answers.unique_insight}
+
+REVENUE MODEL:
+${answers.revenue}`
 }

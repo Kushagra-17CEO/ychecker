@@ -19,9 +19,10 @@ export interface Application {
   user_id: string
   one_liner: string
   problem: string
-  traction: string
-  team: string
-  competitors: string
+  progress: string
+  why_this_idea: string
+  unique_insight: string
+  revenue: string
   report_type: 'ai' | 'expert'
   status: 'pending' | 'processing' | 'complete' | 'expert_pending' | 'expert_delivered'
   created_at: string
@@ -38,9 +39,14 @@ export interface SectionEvaluation {
 export interface ReportSections {
   one_liner: SectionEvaluation
   problem: SectionEvaluation
-  traction: SectionEvaluation
-  team: SectionEvaluation
-  competitors: SectionEvaluation
+  progress: SectionEvaluation
+  why_this_idea: SectionEvaluation
+  unique_insight: SectionEvaluation
+  revenue: SectionEvaluation
+  // Old keys for backward compatibility with existing reports
+  traction?: SectionEvaluation
+  team?: SectionEvaluation
+  competitors?: SectionEvaluation
 }
 
 export interface Report {
@@ -81,9 +87,10 @@ export interface Payment {
 export interface EvaluateRequest {
   one_liner: string
   problem: string
-  traction: string
-  team: string
-  competitors: string
+  progress: string
+  why_this_idea: string
+  unique_insight: string
+  revenue: string
 }
 
 export interface GeminiEvaluationResponse {
@@ -115,9 +122,10 @@ export interface VerifyPaymentRequest {
 export interface ApplicationFormData {
   one_liner: string
   problem: string
-  traction: string
-  team: string
-  competitors: string
+  progress: string
+  why_this_idea: string
+  unique_insight: string
+  revenue: string
 }
 
 export type ScoreColor = 'red' | 'amber' | 'green'

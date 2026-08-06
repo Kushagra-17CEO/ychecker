@@ -17,9 +17,10 @@ interface AdminApplication {
   user_id: string
   one_liner: string
   problem: string
-  traction: string
-  team: string
-  competitors: string
+  progress: string
+  why_this_idea: string
+  unique_insight: string
+  revenue: string
   status: string
   report_type: string
   created_at: string
@@ -354,10 +355,11 @@ function UserTable({
                 </p>
                 {[
                   { label: 'One-Liner', value: latestApp.one_liner },
-                  { label: 'Problem', value: latestApp.problem },
-                  { label: 'Traction', value: latestApp.traction },
-                  { label: 'Team', value: latestApp.team },
-                  { label: 'Competitors', value: latestApp.competitors },
+                  { label: 'Problem & Solution', value: latestApp.problem },
+                  { label: 'How Far Along Are You?', value: latestApp.progress },
+                  { label: 'Why Did You Pick This Idea?', value: latestApp.why_this_idea },
+                  { label: 'Your Unique Insight', value: latestApp.unique_insight },
+                  { label: 'Revenue Model', value: latestApp.revenue },
                 ].map(({ label, value }) => (
                   <div key={label} className="mb-3">
                     <p

@@ -75,9 +75,10 @@ export async function POST(request: Request) {
     const sanitizedData = {
       one_liner: sanitizeInput(parseResult.data.one_liner),
       problem: sanitizeInput(parseResult.data.problem),
-      traction: sanitizeInput(parseResult.data.traction),
-      team: sanitizeInput(parseResult.data.team),
-      competitors: sanitizeInput(parseResult.data.competitors),
+      progress: sanitizeInput(parseResult.data.progress),
+      why_this_idea: sanitizeInput(parseResult.data.why_this_idea),
+      unique_insight: sanitizeInput(parseResult.data.unique_insight),
+      revenue: sanitizeInput(parseResult.data.revenue),
     }
 
     // 4. Save application to Supabase using admin client (bypasses RLS)
@@ -88,9 +89,10 @@ export async function POST(request: Request) {
         user_id: user.id,
         one_liner: sanitizedData.one_liner,
         problem: sanitizedData.problem,
-        traction: sanitizedData.traction,
-        team: sanitizedData.team,
-        competitors: sanitizedData.competitors,
+        progress: sanitizedData.progress,
+        why_this_idea: sanitizedData.why_this_idea,
+        unique_insight: sanitizedData.unique_insight,
+        revenue: sanitizedData.revenue,
         report_type: 'ai',
         status: 'processing',
       })

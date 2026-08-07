@@ -1,14 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { unstable_cache } from 'next/cache'
 
 /**
  * Live stats for the landing page stats strip.
  * Cached for 60 seconds to avoid hitting Supabase on every page load.
+ * Uses admin client (not server client) to avoid cookies() inside unstable_cache.
  */
 export const getLandingStats = unstable_cache(
   async () => {
     try {
-      const supabase = await createClient()
+      const supabase = createAdminClient()
 
       // Stat 1: Total applications evaluated
       const { count: totalApps, error: appsError } = await supabase

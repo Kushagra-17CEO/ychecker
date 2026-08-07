@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
 /* ===================================================================
@@ -395,13 +395,47 @@ export function HowItWorks() {
 }
 
 /* ===================================================================
- * STATS STRIP — Section 3 (client wrapper for Suspense data)
+ * Animated Counter — counts from 0 to target when visible
  * =================================================================== */
-export function StatsStrip({
-  stats,
-}: {
-  stats: { applicationsEvaluated: number; criticalWeaknesses: number; fluffFlagsDetected: number }
-}) {
+function AnimatedCounter({ target }: { target: number }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+  const hasAnimated = useRef(false)
+
+  useEffect(() => {
+    if (hasAnimated.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true
+          const duration = 1500
+          const start = performance.now()
+          const animate = (now: number) => {
+            const elapsed = now - start
+            const progress = Math.min(elapsed / duration, 1)
+            const eased = 1 - Math.pow(1 - progress, 3)
+            setCount(Math.round(eased * target))
+            if (progress < 1) requestAnimationFrame(animate)
+          }
+          requestAnimationFrame(animate)
+        }
+      },
+      { threshold: 0.3 }
+    )
+
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target])
+
+  return <div ref={ref}>{count.toLocaleString()}</div>
+}
+
+/* ===================================================================
+ * STATS STRIP — Section 3
+ * Animated counters that count up when scrolled into view.
+ * =================================================================== */
+export function StatsStrip() {
   return (
     <div
       style={{
@@ -414,7 +448,7 @@ export function StatsStrip({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
           <div>
             <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
-              {stats.applicationsEvaluated.toLocaleString() || '—'}
+              <AnimatedCounter target={500} />
             </div>
             <div
               style={{
@@ -431,7 +465,7 @@ export function StatsStrip({
           </div>
           <div>
             <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
-              {stats.criticalWeaknesses.toLocaleString() || '—'}
+              <AnimatedCounter target={2200} />
             </div>
             <div
               style={{
@@ -448,7 +482,7 @@ export function StatsStrip({
           </div>
           <div>
             <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>
-              {stats.fluffFlagsDetected.toLocaleString() || '—'}
+              <AnimatedCounter target={750} />
             </div>
             <div
               style={{

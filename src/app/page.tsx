@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Suspense } from 'react'
-import { getLandingStats } from '@/lib/landing-stats'
 import {
   StatsStrip,
   SuccessCarousel,
@@ -23,14 +21,6 @@ export const metadata: Metadata = {
     'startup feedback',
     'YC application review',
   ],
-}
-
-/* ------------------------------------------------------------------
- * Stats Strip Server Wrapper — fetches live data, passes to client
- * ------------------------------------------------------------------ */
-async function StatsStripServer() {
-  const stats = await getLandingStats()
-  return <StatsStrip stats={stats} />
 }
 
 /* ------------------------------------------------------------------
@@ -150,44 +140,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ===== 3. LIVE STATS STRIP ===== */}
-        <Suspense
-          fallback={
-            <div
-              style={{
-                borderTop: '1px solid #DDDDDD',
-                borderBottom: '1px solid #DDDDDD',
-                padding: '40px 0',
-              }}
-            >
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-                  {['Applications Evaluated', 'Critical Weaknesses Found', 'Fluff Flags Detected'].map(
-                    (label) => (
-                      <div key={label}>
-                        <div style={{ fontSize: 40, fontWeight: 900, color: '#1A7F4B' }}>—</div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: '#666666',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                            marginTop: 4,
-                          }}
-                        >
-                          {label}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <StatsStripServer />
-        </Suspense>
+        {/* ===== 3. STATS STRIP ===== */}
+        <StatsStrip />
 
         {/* ===== 4. SUCCESS STORIES CAROUSEL ===== */}
         <SuccessCarousel />

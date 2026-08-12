@@ -98,6 +98,8 @@ const stepVariants = {
 /* ===================================================================
  * Main Application Form Component
  * =================================================================== */
+const STORAGE_KEY = 'ychecker_form_draft'
+
 export default function ApplicationForm() {
   const [currentStep, setCurrentStep] = useState(0)
   const [direction, setDirection] = useState(1)
@@ -105,6 +107,7 @@ export default function ApplicationForm() {
   const [user, setUser] = useState<User | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pendingAutoSubmit, setPendingAutoSubmit] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -114,6 +117,8 @@ export default function ApplicationForm() {
     handleSubmit,
     trigger,
     watch,
+    reset,
+    getValues,
     formState: { errors },
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
@@ -127,6 +132,22 @@ export default function ApplicationForm() {
       revenue: '',
     },
   })
+
+  // Restore saved form data on mount (survives OAuth redirect)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved) as ApplicationFormData
+        reset(parsed)
+        // Jump to last step so user can submit immediately
+        setCurrentStep(STEPS.length - 1)
+        setPendingAutoSubmit(true)
+      }
+    } catch {
+      // Corrupt data — ignore
+    }
+  }, [reset])
 
   // Track auth state
   useEffect(() => {
@@ -142,6 +163,37 @@ export default function ApplicationForm() {
 
     return () => subscription.unsubscribe()
   }, [supabase.auth])
+
+  // Auto-submit after OAuth redirect: user is now authenticated + form was restored
+  useEffect(() => {
+    if (user && pendingAutoSubmit) {
+      setPendingAutoSubmit(false)
+      // Small delay to let React Hook Form settle after reset
+      const timer = setTimeout(() => {
+        handleSubmit(submitApplication)()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pendingAutoSubmit])
+
+  // Save form data to sessionStorage
+  const saveFormDraft = () => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(getValues()))
+    } catch {
+      // Storage full or unavailable — non-critical
+    }
+  }
+
+  // Clear saved draft
+  const clearFormDraft = () => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // Non-critical
+    }
+  }
 
   // Current step field name
   const step = STEPS[currentStep]
@@ -188,6 +240,8 @@ export default function ApplicationForm() {
   const onSubmit = async (data: ApplicationFormData) => {
     // Auth gate — show modal if not logged in (Blueprint Section 4.3)
     if (!user) {
+      // Save form data before potential OAuth redirect
+      saveFormDraft()
       setShowAuthModal(true)
       return
     }
@@ -213,6 +267,8 @@ export default function ApplicationForm() {
       }
 
       const result = await response.json()
+      // Clear saved draft on success
+      clearFormDraft()
       // Navigate to processing screen, then to report
       router.push(`/processing?id=${result.report_id}`)
     } catch (err) {
@@ -221,7 +277,7 @@ export default function ApplicationForm() {
     }
   }
 
-  // Auth modal success handler — user just signed in, retry submit
+  // Auth modal success handler — user just signed in via email/password, retry submit
   const handleAuthSuccess = () => {
     setShowAuthModal(false)
     // Re-trigger form submit now that user is authenticated

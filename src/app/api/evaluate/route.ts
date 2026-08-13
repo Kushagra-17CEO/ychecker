@@ -9,9 +9,14 @@ import type { GeminiEvaluationResponse } from '@/lib/types'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
+ * Allow up to 60 seconds for the Gemini API call.
+ * Vercel Hobby = max 60s, Pro = max 300s.
+ */
+export const maxDuration = 60
+
+/**
  * POST /api/evaluate
  *
- * Phase 5 — Full Gemini API integration.
  * 1. Verify authentication
  * 2. Validate + sanitize input
  * 3. Save application to Supabase
@@ -20,6 +25,9 @@ import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
  * 6. Return report_id to frontend
  */
 export async function POST(request: Request) {
+  let applicationId: string | null = null
+  const adminSupabase = createAdminClient()
+
   try {
     // 1. Verify authentication
     const supabase = await createClient()
@@ -40,7 +48,6 @@ export async function POST(request: Request) {
     if (!rl.allowed) return rateLimitResponse(rl.retryAfter)
 
     // 1b. Rate limiting — 3 calls per user per hour (Blueprint Section 10.5)
-    const adminSupabase = createAdminClient()
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
     const { count: recentCount } = await adminSupabase
@@ -82,7 +89,6 @@ export async function POST(request: Request) {
     }
 
     // 4. Save application to Supabase using admin client (bypasses RLS)
-
     const { data: application, error: appError } = await adminSupabase
       .from('applications')
       .insert({
@@ -107,10 +113,16 @@ export async function POST(request: Request) {
       )
     }
 
+    applicationId = application.id
+
     // 5. Call Gemini API
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set')
+      await adminSupabase
+        .from('applications')
+        .update({ status: 'pending' })
+        .eq('id', applicationId)
       return NextResponse.json(
         { error: 'AI service is not configured. Please contact support.' },
         { status: 500 }
@@ -129,12 +141,33 @@ export async function POST(request: Request) {
 
     const userPrompt = buildUserPrompt(sanitizedData)
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
-    })
+    // Use AbortController for a 50-second timeout (leaving 10s buffer for DB writes)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 50_000)
 
-    const responseText = result.response.text()
+    let responseText: string
+    try {
+      const result = await model.generateContent(
+        {
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
+        },
+        { signal: controller.signal } as unknown as Record<string, unknown>
+      )
+      responseText = result.response.text()
+    } catch (geminiErr) {
+      clearTimeout(timeoutId)
+      console.error('Gemini API call failed:', geminiErr)
+      await adminSupabase
+        .from('applications')
+        .update({ status: 'pending' })
+        .eq('id', applicationId)
+      return NextResponse.json(
+        { error: 'AI evaluation timed out or failed. Please try again.' },
+        { status: 504 }
+      )
+    }
+    clearTimeout(timeoutId)
 
     // 6. Parse the JSON response from Gemini
     let evaluation: GeminiEvaluationResponse
@@ -142,11 +175,10 @@ export async function POST(request: Request) {
       evaluation = JSON.parse(responseText)
     } catch {
       console.error('Failed to parse Gemini response:', responseText)
-      // Update application status to reflect failure
       await adminSupabase
         .from('applications')
         .update({ status: 'pending' })
-        .eq('id', application.id)
+        .eq('id', applicationId)
 
       return NextResponse.json(
         { error: 'AI returned an invalid response. Please try again.' },
@@ -171,7 +203,7 @@ export async function POST(request: Request) {
     const { data: report, error: reportError } = await adminSupabase
       .from('reports')
       .insert({
-        application_id: application.id,
+        application_id: applicationId,
         user_id: user.id,
         overall_score: Math.max(1, Math.min(100, evaluation.overall_score)),
         strengths: allStrengths,
@@ -190,6 +222,10 @@ export async function POST(request: Request) {
 
     if (reportError || !report) {
       console.error('Failed to save report:', reportError)
+      await adminSupabase
+        .from('applications')
+        .update({ status: 'pending' })
+        .eq('id', applicationId)
       return NextResponse.json(
         { error: 'Failed to save your report. Please try again.' },
         { status: 500 }
@@ -200,7 +236,7 @@ export async function POST(request: Request) {
     await adminSupabase
       .from('applications')
       .update({ status: 'complete' })
-      .eq('id', application.id)
+      .eq('id', applicationId)
 
     // 10. Return report ID to frontend
     return NextResponse.json({
@@ -209,6 +245,14 @@ export async function POST(request: Request) {
     })
   } catch (err) {
     console.error('Evaluate API error:', err)
+    // Reset stuck application status so it doesn't stay at 'processing' forever
+    if (applicationId) {
+      await adminSupabase
+        .from('applications')
+        .update({ status: 'pending' })
+        .eq('id', applicationId)
+        .then(null, (e: unknown) => console.error('Failed to reset application status:', e))
+    }
     return NextResponse.json(
       { error: 'Something went wrong. Please try again.' },
       { status: 500 }

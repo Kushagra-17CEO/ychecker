@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { applicationSchema } from '@/lib/validations'
@@ -20,7 +20,7 @@ export const maxDuration = 60
  * 1. Verify authentication
  * 2. Validate + sanitize input
  * 3. Save application to Supabase
- * 4. Call Gemini API (gemini-2.0-flash)
+ * 4. Call Gemini API (gemini-2.0-flash) via @google/genai SDK
  * 5. Parse response, save report to Supabase
  * 6. Return report_id to frontend
  */
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
 
     applicationId = application.id
 
-    // 5. Call Gemini API
+    // 5. Call Gemini API using @google/genai SDK (supports AQ. auth keys)
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.error('GEMINI_API_KEY is not set')
@@ -129,45 +129,37 @@ export async function POST(request: Request) {
       )
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
-    })
-
+    const ai = new GoogleGenAI({ apiKey })
     const userPrompt = buildUserPrompt(sanitizedData)
-
-    // Use AbortController for a 50-second timeout (leaving 10s buffer for DB writes)
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 50_000)
 
     let responseText: string
     try {
-      const result = await model.generateContent(
-        {
-          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-          systemInstruction: { role: 'system', parts: [{ text: SYSTEM_PROMPT }] },
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.7,
+          maxOutputTokens: 4096,
+          responseMimeType: 'application/json',
         },
-        { signal: controller.signal } as unknown as Record<string, unknown>
-      )
-      responseText = result.response.text()
+      })
+
+      responseText = result.text ?? ''
+      if (!responseText) {
+        throw new Error('Gemini returned empty response')
+      }
     } catch (geminiErr) {
-      clearTimeout(timeoutId)
       console.error('Gemini API call failed:', geminiErr)
       await adminSupabase
         .from('applications')
         .update({ status: 'pending' })
         .eq('id', applicationId)
       return NextResponse.json(
-        { error: 'AI evaluation timed out or failed. Please try again.' },
-        { status: 504 }
+        { error: 'AI evaluation failed. Please try again.' },
+        { status: 502 }
       )
     }
-    clearTimeout(timeoutId)
 
     // 6. Parse the JSON response from Gemini
     let evaluation: GeminiEvaluationResponse

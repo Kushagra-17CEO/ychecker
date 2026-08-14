@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     let responseText: string
     try {
       const result = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3.5-flash',
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
         config: {
           systemInstruction: SYSTEM_PROMPT,

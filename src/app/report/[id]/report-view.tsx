@@ -358,22 +358,48 @@ function UnlockedReport({
   const scoreColor = getScoreColor(score)
   const colorHex = SCORE_COLORS[scoreColor]
 
+  // Donut gauge calculations
+  const gaugeRadius = 52
+  const gaugeCircumference = 2 * Math.PI * gaugeRadius
+  const gaugeOffset = gaugeCircumference - (score / 100) * gaugeCircumference
+  const gaugeColor = score < 50 ? '#C0392B' : score < 75 ? '#D68910' : '#1A7F4B'
+
   return (
     <div>
-      {/* Overall Score Badge */}
+      {/* Overall Score — Circular Donut Gauge */}
       <div className="text-center mb-8">
-        <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: '#FF6B35' }}>
+        <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: '#FF6B35' }}>
           Your Score
         </p>
-        <div
-          className="inline-flex items-center justify-center w-28 h-28 rounded-full mb-3"
-          style={{ border: `4px solid ${colorHex}` }}
-        >
-          <span className="text-4xl font-black" style={{ color: colorHex }}>
-            {score}
-          </span>
+        <div className="inline-block relative" style={{ width: 140, height: 140 }}>
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            {/* Background track */}
+            <circle
+              cx="70" cy="70" r={gaugeRadius}
+              fill="none" stroke="#EEEEEE" strokeWidth="12"
+            />
+            {/* Score arc */}
+            <circle
+              cx="70" cy="70" r={gaugeRadius}
+              fill="none"
+              stroke={gaugeColor}
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeDasharray={gaugeCircumference}
+              strokeDashoffset={gaugeOffset}
+              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 1s ease-out' }}
+            />
+          </svg>
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <span className="text-4xl font-black" style={{ color: gaugeColor, lineHeight: 1 }}>
+              {score}
+            </span>
+            <span className="text-xs font-medium" style={{ color: '#999999' }}>/ 100</span>
+          </div>
         </div>
-        <p className="text-sm font-medium" style={{ color: colorHex }}>
+        <p className="text-sm font-medium mt-2" style={{ color: gaugeColor }}>
           {score < 50 ? 'Needs Major Work' : score < 75 ? 'Getting There' : 'Strong Application'}
         </p>
       </div>
@@ -398,7 +424,15 @@ function UnlockedReport({
           </h2>
           {Object.entries(report.sections).map(([key, section]) => {
             const isExpanded = expandedSections.has(key)
-            const sectionColor = SCORE_COLORS[getScoreColor(section.score * 10)]
+            // Letter grade: A (8-10), B (6-7), C (4-5), D (<4)
+            const grade = section.score >= 8 ? 'A' : section.score >= 6 ? 'B' : section.score >= 4 ? 'C' : 'D'
+            const gradeColors: Record<string, { bg: string; text: string }> = {
+              A: { bg: '#E8F5E8', text: '#1A7F4B' },
+              B: { bg: '#E3F2FD', text: '#1565C0' },
+              C: { bg: '#FFF8E1', text: '#D68910' },
+              D: { bg: '#FDEDEB', text: '#C0392B' },
+            }
+            const gc = gradeColors[grade]
 
             return (
               <div key={key} className="card" style={{ borderColor: '#DDDDDD' }}>
@@ -410,14 +444,24 @@ function UnlockedReport({
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="flex items-center justify-center w-10 h-10 rounded-lg text-white text-sm font-bold"
-                      style={{ backgroundColor: sectionColor }}
+                      className="flex items-center justify-center rounded-lg text-sm font-bold"
+                      style={{
+                        backgroundColor: gc.bg,
+                        color: gc.text,
+                        width: 40,
+                        height: 40,
+                        fontSize: 16,
+                        letterSpacing: '0.02em',
+                      }}
                     >
-                      {section.score}
+                      {grade}
                     </div>
-                    <h3 className="text-base font-semibold" style={{ color: '#111111' }}>
-                      {SECTION_LABELS[key] || key}
-                    </h3>
+                    <div>
+                      <h3 className="text-base font-semibold" style={{ color: '#111111' }}>
+                        {SECTION_LABELS[key] || key}
+                      </h3>
+                      <span className="text-xs" style={{ color: '#999999' }}>{section.score}/10</span>
+                    </div>
                   </div>
                   <svg
                     width="20"
@@ -444,10 +488,20 @@ function UnlockedReport({
                         <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#1A7F4B' }}>
                           Strengths
                         </p>
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                           {section.strengths.map((s, i) => (
-                            <li key={i} className="text-sm flex items-start gap-2" style={{ color: '#333333' }}>
-                              <span style={{ color: '#1A7F4B' }}>✓</span> {s}
+                            <li
+                              key={i}
+                              className="text-sm"
+                              style={{
+                                color: '#333333',
+                                borderLeft: '3px solid #1A7F4B',
+                                paddingLeft: 12,
+                                paddingTop: 4,
+                                paddingBottom: 4,
+                              }}
+                            >
+                              {s}
                             </li>
                           ))}
                         </ul>
@@ -460,10 +514,20 @@ function UnlockedReport({
                         <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#C0392B' }}>
                           Weaknesses
                         </p>
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                           {section.weaknesses.map((w, i) => (
-                            <li key={i} className="text-sm flex items-start gap-2" style={{ color: '#333333' }}>
-                              <span style={{ color: '#C0392B' }}>✗</span> {w}
+                            <li
+                              key={i}
+                              className="text-sm"
+                              style={{
+                                color: '#333333',
+                                borderLeft: '3px solid #C0392B',
+                                paddingLeft: 12,
+                                paddingTop: 4,
+                                paddingBottom: 4,
+                              }}
+                            >
+                              {w}
                             </li>
                           ))}
                         </ul>
@@ -476,21 +540,23 @@ function UnlockedReport({
                         <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#D68910' }}>
                           Fluff Detected
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <ul className="space-y-2">
                           {section.fluff_flags.map((f, i) => (
-                            <span
+                            <li
                               key={i}
-                              className="inline-block text-xs px-2 py-1 rounded-full font-medium"
+                              className="text-sm"
                               style={{
-                                backgroundColor: '#FFF8E1',
-                                color: '#D68910',
-                                border: '1px solid #D68910',
+                                color: '#333333',
+                                borderLeft: '3px solid #D68910',
+                                paddingLeft: 12,
+                                paddingTop: 4,
+                                paddingBottom: 4,
                               }}
                             >
                               &ldquo;{f}&rdquo;
-                            </span>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     )}
 
@@ -535,7 +601,7 @@ function UnlockedReport({
         </div>
       )}
 
-      {/* The Secret Score */}
+      {/* The Secret Score — Horizontal Progress Bar */}
       {report.the_secret_score !== undefined && (
         <div
           className="card mb-8"
@@ -544,19 +610,41 @@ function UnlockedReport({
             borderLeftWidth: '4px',
           }}
         >
-          <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-lg font-semibold" style={{ color: '#111111' }}>
-              💡 The Secret Score
-            </h2>
+          <h2 className="text-lg font-semibold mb-3" style={{ color: '#111111' }}>
+            💡 The Secret Score
+          </h2>
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-bold" style={{ color: '#FF6B35' }}>
+                {report.the_secret_score} / 10
+              </span>
+            </div>
+            {/* Progress bar track */}
             <div
-              className="flex items-center justify-center w-10 h-10 rounded-full text-white text-sm font-bold"
               style={{
-                backgroundColor: SCORE_COLORS[getScoreColor(report.the_secret_score * 10)],
+                width: '100%',
+                height: 10,
+                backgroundColor: '#EEEEEE',
+                borderRadius: 5,
+                overflow: 'hidden',
               }}
             >
-              {report.the_secret_score}
+              {/* Filled bar */}
+              <div
+                style={{
+                  width: `${(report.the_secret_score / 10) * 100}%`,
+                  height: '100%',
+                  backgroundColor: '#FF6B35',
+                  borderRadius: 5,
+                  transition: 'width 1s ease-out',
+                }}
+              />
             </div>
-            <span className="text-sm" style={{ color: '#666666' }}>/10</span>
+            {/* Scale labels */}
+            <div className="flex justify-between mt-1">
+              <span className="text-xs" style={{ color: '#999999' }}>1</span>
+              <span className="text-xs" style={{ color: '#999999' }}>10</span>
+            </div>
           </div>
           {report.the_secret_explanation && (
             <p className="text-sm leading-relaxed" style={{ color: '#333333' }}>

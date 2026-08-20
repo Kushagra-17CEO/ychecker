@@ -110,7 +110,7 @@ export default async function AccountPage() {
                         color: '#1A7F4B',
                       }}
                     >
-                      AI Report
+                      Standard Report
                     </span>
                     <span className="text-sm" style={{ color: '#666666' }}>
                       Purchased

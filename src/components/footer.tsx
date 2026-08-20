@@ -2,13 +2,13 @@ import Link from 'next/link'
 
 /**
  * Footer — Landing Page Blueprint Section 9
- * Two-column on desktop, stacked on mobile. Clean and minimal.
+ * Two-column on desktop, stacked on mobile. Black background, white text.
  */
 export default function Footer() {
   return (
     <footer
       className="w-full"
-      style={{ borderTop: '1px solid #DDDDDD' }}
+      style={{ backgroundColor: '#000000' }}
     >
       {/* Hover style for footer links — CSS only, no JS handlers */}
       <style>{`
@@ -33,7 +33,7 @@ export default function Footer() {
             <p
               style={{
                 fontSize: 14,
-                color: '#666666',
+                color: '#AAAAAA',
                 marginTop: 4,
               }}
             >
@@ -51,12 +51,12 @@ export default function Footer() {
             ].map((link, i) => (
               <span key={link.label} className="flex items-center gap-4">
                 {i > 0 && (
-                  <span style={{ color: '#DDDDDD' }}>·</span>
+                  <span style={{ color: '#444444' }}>·</span>
                 )}
                 <Link
                   href={link.href}
                   className="footer-link no-underline"
-                  style={{ color: '#666666' }}
+                  style={{ color: '#CCCCCC' }}
                 >
                   {link.label}
                 </Link>
@@ -69,12 +69,12 @@ export default function Footer() {
       {/* Bottom copyright line */}
       <div
         style={{
-          borderTop: '1px solid #DDDDDD',
+          borderTop: '1px solid #222222',
           padding: '24px 16px',
         }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p style={{ fontSize: 13, color: '#666666', margin: 0 }}>
+          <p style={{ fontSize: 13, color: '#888888', margin: 0 }}>
             © {new Date().getFullYear()} YChecker. All rights reserved.
           </p>
         </div>

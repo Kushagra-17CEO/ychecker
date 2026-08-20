@@ -149,7 +149,7 @@ export default function CheckoutClient() {
             className="text-2xl font-bold mb-2"
             style={{ color: '#111111' }}
           >
-            {tier === 'expert' ? 'Expert Review' : 'AI Report'}
+            {tier === 'expert' ? 'Expert Review' : 'Standard Report'}
           </h1>
           <p
             className="text-4xl font-black mb-6"

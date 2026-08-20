@@ -5,7 +5,7 @@
  * Maps shadcn's expected variables to the YChecker design system colours
  */
 :root {
-  --background: #FFFFFF;
+  --background: #FAFAF8;
   --foreground: #111111;
   --primary: #FF6B35;
   --primary-foreground: #FFFFFF;
@@ -29,7 +29,7 @@
 
 @theme {
   /* ===== COLOURS (Section 7.1) ===== */
-  --color-background: #FFFFFF;
+  --color-background: #FAFAF8;
   --color-primary-black: #111111;
   --color-accent-orange: #FF6B35;
   --color-accent-orange-hover: #E55A25;

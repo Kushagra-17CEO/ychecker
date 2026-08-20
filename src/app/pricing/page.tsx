@@ -6,7 +6,7 @@ import Footer from '@/components/footer'
 export const metadata: Metadata = {
   title: 'Pricing — YChecker',
   description:
-    'YC gives accepted startups $500,000. Don\'t risk it on a weak application. Get your AI Report for $19.99 or Expert Review for $79.99.',
+    'YC gives accepted startups $500,000. Don\'t risk it on a weak application. Get your Standard Report for $19.99 or Expert Review for $79.99.',
 }
 
 export default function PricingPage() {
@@ -38,11 +38,11 @@ export default function PricingPage() {
         <section className="pb-16 md:pb-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* AI Report */}
+              {/* Standard Report */}
               <div className="card flex flex-col" style={{ border: '1px solid #DDDDDD' }}>
                 <div className="mb-6">
                   <h2 className="text-xl font-bold mb-1" style={{ color: '#111111' }}>
-                    AI Report
+                    Standard Report
                   </h2>
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="text-3xl font-black" style={{ color: '#FF6B35' }}>
@@ -87,7 +87,7 @@ export default function PricingPage() {
                   href="/apply"
                   className="block text-center no-underline py-3 px-6 rounded-lg font-semibold text-base transition-colors duration-150 btn-secondary"
                 >
-                  Get My AI Report — $19.99
+                  Get My Standard Report — $19.99
                 </Link>
               </div>
 

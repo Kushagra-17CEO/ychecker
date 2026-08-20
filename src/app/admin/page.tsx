@@ -221,7 +221,7 @@ function StatsBar({ stats }: { stats: AdminStats }) {
   const items = [
     { label: 'Total Sign-ups', value: stats.totalSignups },
     { label: 'This Week', value: stats.signupsThisWeek },
-    { label: 'AI Reports Sold', value: stats.totalAIReports },
+    { label: 'Standard Reports Sold', value: stats.totalAIReports },
     { label: 'Expert Reviews Sold', value: stats.totalExpertReviews },
     {
       label: 'Total Revenue',

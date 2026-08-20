@@ -135,7 +135,7 @@ export async function POST(request: Request) {
           })
       }
     } else {
-      // AI Report — unlock immediately
+      // Standard Report - unlock immediately
       await adminSupabase
         .from('reports')
         .update({ is_unlocked: true })
@@ -155,10 +155,10 @@ export async function POST(request: Request) {
           .eq('id', report.application_id)
       }
 
-      // Send "Your AI Report is ready" email (non-blocking)
+      // Send "Your Standard Report is ready" email (non-blocking)
       sendEmail({
         to: user.email!,
-        subject: 'Your AI Report Is Ready',
+        subject: 'Your Standard Report Is Ready',
         react: ReportReadyEmail({ reportId: report_id }),
       }).catch((e) => console.error('Report ready email failed:', e))
     }

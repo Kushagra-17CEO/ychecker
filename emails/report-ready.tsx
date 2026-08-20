@@ -19,20 +19,20 @@ interface ReportReadyEmailProps {
 }
 
 /**
- * Report Ready Email — sent after AI report payment confirmed
+ * Report Ready Email — sent after Standard report payment confirmed
  * Blueprint Section 9.1: Direct link to /report/[id]. Full report now unlocked.
  */
 export default function ReportReadyEmail({ reportId }: ReportReadyEmailProps) {
   return (
     <Html>
       <Head />
-      <Preview>Your AI Report is ready — see your YC application score</Preview>
+      <Preview>Your Standard Report is ready — see your YC application score</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Heading style={logoStyle}>YChecker</Heading>
 
           <Heading as="h1" style={h1Style}>
-            Your AI Report Is Ready
+            Your Standard Report Is Ready
           </Heading>
 
           <Text style={textStyle}>

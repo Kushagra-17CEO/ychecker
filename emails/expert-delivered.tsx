@@ -42,7 +42,7 @@ export default function ExpertDeliveredEmail({
           </Text>
 
           <Text style={highlightStyle}>
-            Your report includes everything in the AI Report plus expert
+            Your report includes everything in the Standard Report plus expert
             commentary, deeper rewrite suggestions, and human-checked feedback
             on every answer.
           </Text>

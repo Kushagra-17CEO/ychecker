@@ -160,31 +160,71 @@ export default function ReportView({ reportId }: { reportId: string }) {
  * TEASER REPORT — Locked, paywall view (Blueprint Section 4.3)
  * =================================================================== */
 function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: string }) {
+  const [showPricingModal, setShowPricingModal] = useState(false)
+
+  // Show pricing popup after 4 seconds, once per session
+  useEffect(() => {
+    const alreadyShown = sessionStorage.getItem('ychecker_pricing_shown')
+    if (alreadyShown) return
+    const timer = setTimeout(() => {
+      setShowPricingModal(true)
+      sessionStorage.setItem('ychecker_pricing_shown', '1')
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Derive approximate score for donut gauge from obscured_score
+  const tensDigit = parseInt(teaser.obscured_score.charAt(0), 10) || 0
+  const approxScore = tensDigit * 10 + 5 // midpoint estimate
+  const gaugeRadius = 52
+  const gaugeCircumference = 2 * Math.PI * gaugeRadius
+  const gaugeOffset = gaugeCircumference - (approxScore / 100) * gaugeCircumference
+  const gaugeColor = approxScore < 50 ? '#C0392B' : approxScore < 75 ? '#D68910' : '#1A7F4B'
+
+  // Get first 2-3 sentences from verdict for preview
+  const getVerdictPreview = (text: string) => {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
+    return sentences.slice(0, 3).join(' ')
+  }
+
   return (
     <div>
-      {/* Partially obscured score */}
+      {/* Score with donut gauge */}
       <div className="text-center mb-8">
-        <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: '#FF6B35' }}>
+        <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: '#FF6B35' }}>
           Your Score
         </p>
-        <div className="inline-flex items-baseline gap-1">
-          <span className="text-7xl font-black" style={{ color: '#111111' }}>
-            {teaser.obscured_score.charAt(0)}
-          </span>
-          <span
-            className="text-7xl font-black"
-            style={{
-              color: '#DDDDDD',
-              filter: 'blur(8px)',
-              userSelect: 'none',
-            }}
-          >
-            _
-          </span>
-          <span className="text-2xl font-medium ml-1" style={{ color: '#666666' }}>
-            / 100
-          </span>
+        <div className="inline-block relative" style={{ width: 140, height: 140 }}>
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r={gaugeRadius} fill="none" stroke="#EEEEEE" strokeWidth="12" />
+            <circle
+              cx="70" cy="70" r={gaugeRadius}
+              fill="none"
+              stroke={gaugeColor}
+              strokeWidth="12"
+              strokeLinecap="round"
+              strokeDasharray={gaugeCircumference}
+              strokeDashoffset={gaugeOffset}
+              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 1s ease-out' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-5xl font-black" style={{ color: '#111111' }}>
+              {teaser.obscured_score.charAt(0)}
+            </span>
+            <span
+              className="text-5xl font-black"
+              style={{
+                color: '#CCCCCC',
+                filter: 'blur(6px)',
+                userSelect: 'none',
+              }}
+            >
+              {teaser.obscured_score.charAt(1) || '0'}
+            </span>
+          </div>
         </div>
+        <p className="text-sm mt-1" style={{ color: '#999999' }}>/ 100</p>
       </div>
 
       {/* Sneak peek finding — Barnum Effect hook */}
@@ -202,20 +242,21 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
         </div>
       )}
 
-      {/* Verdict preview (truncated) */}
+      {/* Verdict preview — first 2-3 sentences visible, then fade */}
       {teaser.verdict_preview && (
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-2" style={{ color: '#111111' }}>
             The Verdict
           </h2>
           <div className="relative">
-            <p className="text-base" style={{ color: '#666666' }}>
-              {teaser.verdict_preview}
+            <p className="text-base leading-relaxed" style={{ color: '#444444' }}>
+              {getVerdictPreview(teaser.verdict_preview)}
             </p>
             <div
-              className="absolute inset-0 top-1/2"
+              className="absolute inset-x-0 bottom-0"
               style={{
-                background: 'linear-gradient(to bottom, transparent, white)',
+                height: 40,
+                background: 'linear-gradient(to bottom, transparent, #FAFAF8)',
               }}
             />
           </div>
@@ -323,7 +364,7 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
             href={`/checkout?report=${reportId}&tier=ai`}
             className="btn-secondary text-base px-6 py-3 no-underline"
           >
-            Unlock My AI Report — $19.99
+            Unlock My Standard Report — $19.99
           </Link>
           <Link
             href={`/checkout?report=${reportId}&tier=expert`}
@@ -338,6 +379,96 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
           it&apos;s the highest-ROI $79.99 you&apos;ll ever spend.
         </p>
       </div>
+
+      {/* Fix 6 — Pricing Comparison Popup */}
+      {showPricingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowPricingModal(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl p-6 sm:p-8 z-10">
+            {/* Close button */}
+            <button
+              onClick={() => setShowPricingModal(false)}
+              className="absolute top-3 right-3 text-2xl bg-transparent border-none cursor-pointer"
+              style={{ color: '#999999', lineHeight: 1 }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <h2
+              className="text-xl sm:text-2xl font-bold text-center mb-6"
+              style={{ color: '#111111' }}
+            >
+              Unlock the full picture
+            </h2>
+
+            {/* Side-by-side comparison */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {/* Standard Report */}
+              <div
+                className="rounded-lg p-5"
+                style={{ border: '1px solid #DDDDDD', backgroundColor: '#FAFAF8' }}
+              >
+                <h3 className="text-base font-bold mb-1" style={{ color: '#111111' }}>
+                  Standard Report
+                </h3>
+                <p className="text-2xl font-black mb-3" style={{ color: '#FF6B35' }}>
+                  $19.99
+                </p>
+                <ul className="space-y-2 text-sm" style={{ color: '#444444' }}>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Full score breakdown (all 6 sections)</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Strengths & weaknesses per section</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Fluff flags with rewrite suggestions</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Blind spots analysis</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> The Secret Score & verdict</li>
+                </ul>
+              </div>
+
+              {/* Expert Review */}
+              <div
+                className="rounded-lg p-5"
+                style={{ border: '2px solid #FF6B35', backgroundColor: '#FFF8F4' }}
+              >
+                <h3 className="text-base font-bold mb-1" style={{ color: '#111111' }}>
+                  Expert Review
+                </h3>
+                <p className="text-2xl font-black mb-3" style={{ color: '#FF6B35' }}>
+                  $79.99
+                </p>
+                <ul className="space-y-2 text-sm" style={{ color: '#444444' }}>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Everything in Standard Report</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Line-by-line expert rewrite</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Personalized strategy recommendations</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> Reviewed by YC-experienced founder</li>
+                  <li className="flex items-start gap-2"><span style={{ color: '#1A7F4B' }}>✓</span> 48-hour turnaround guarantee</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* CTA buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href={`/checkout?report=${reportId}&tier=ai`}
+                className="btn-secondary text-sm px-5 py-3 no-underline w-full sm:w-auto text-center"
+              >
+                Get Standard Report — $19.99
+              </Link>
+              <Link
+                href={`/checkout?report=${reportId}&tier=expert`}
+                className="btn-primary text-sm px-5 py-3 no-underline w-full sm:w-auto text-center"
+              >
+                Get Expert Review — $79.99
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

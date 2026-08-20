@@ -148,7 +148,7 @@ export const SCORE_COLORS: Record<ScoreColor, string> = {
 
 export const PRICING = {
   ai: {
-    label: 'AI Report',
+    label: 'Standard Report',
     priceUSD: 19.99,
     priceINR: 1670,
     amountPaise: 167000,

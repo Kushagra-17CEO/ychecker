@@ -38,7 +38,7 @@ export default function ExpertReviewOrderedEmail() {
           </Text>
 
           <Text style={textStyle}>
-            Your report will include everything in the AI Report plus expert
+            Your report will include everything in the Standard Report plus expert
             commentary on each answer and deeper, human-checked rewrite
             suggestions.
           </Text>

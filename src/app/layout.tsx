@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full flex flex-col font-sans antialiased bg-white text-primary-black">
+      <body className="min-h-full flex flex-col font-sans antialiased bg-background text-primary-black">
         {children}
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"

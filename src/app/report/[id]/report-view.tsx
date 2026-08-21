@@ -173,18 +173,17 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
     return () => clearTimeout(timer)
   }, [])
 
-  // Derive approximate score for donut gauge from obscured_score
-  const tensDigit = parseInt(teaser.obscured_score.charAt(0), 10) || 0
-  const approxScore = tensDigit * 10 + 5 // midpoint estimate
-  const gaugeRadius = 52
+  // Parse full score from obscured_score
+  const teaserScore = parseInt(teaser.obscured_score, 10) || 0
+  const gaugeRadius = 64
   const gaugeCircumference = 2 * Math.PI * gaugeRadius
-  const gaugeOffset = gaugeCircumference - (approxScore / 100) * gaugeCircumference
-  const gaugeColor = approxScore < 50 ? '#C0392B' : approxScore < 75 ? '#D68910' : '#1A7F4B'
+  const gaugeOffset = gaugeCircumference - (teaserScore / 100) * gaugeCircumference
+  const gaugeColor = teaserScore < 50 ? '#E53935' : teaserScore < 75 ? '#F59E0B' : '#16A34A'
 
-  // Get first 2-3 sentences from verdict for preview
+  // Get first 2 full sentences from verdict for preview
   const getVerdictPreview = (text: string) => {
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
-    return sentences.slice(0, 3).join(' ')
+    return sentences.slice(0, 2).join(' ')
   }
 
   return (
@@ -194,11 +193,11 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
         <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: '#FF6B35' }}>
           Your Score
         </p>
-        <div className="inline-block relative" style={{ width: 140, height: 140 }}>
-          <svg width="140" height="140" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" r={gaugeRadius} fill="none" stroke="#EEEEEE" strokeWidth="12" />
+        <div className="inline-block relative" style={{ width: 160, height: 160 }}>
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r={gaugeRadius} fill="none" stroke="#EEEEEE" strokeWidth="12" />
             <circle
-              cx="70" cy="70" r={gaugeRadius}
+              cx="80" cy="80" r={gaugeRadius}
               fill="none"
               stroke={gaugeColor}
               strokeWidth="12"
@@ -208,23 +207,13 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
               style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 1s ease-out' }}
             />
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-black" style={{ color: '#111111' }}>
-              {teaser.obscured_score.charAt(0)}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-5xl font-black" style={{ color: '#111111', lineHeight: 1 }}>
+              {teaserScore}
             </span>
-            <span
-              className="text-5xl font-black"
-              style={{
-                color: '#CCCCCC',
-                filter: 'blur(6px)',
-                userSelect: 'none',
-              }}
-            >
-              {teaser.obscured_score.charAt(1) || '0'}
-            </span>
+            <span className="text-xs font-medium mt-1" style={{ color: '#999999' }}>/ 100</span>
           </div>
         </div>
-        <p className="text-sm mt-1" style={{ color: '#999999' }}>/ 100</p>
       </div>
 
       {/* Sneak peek finding — Barnum Effect hook */}
@@ -242,7 +231,7 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
         </div>
       )}
 
-      {/* Verdict preview — first 2-3 sentences visible, then fade */}
+      {/* Verdict preview — first 2 sentences visible, then fade */}
       {teaser.verdict_preview && (
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-2" style={{ color: '#111111' }}>
@@ -490,10 +479,10 @@ function UnlockedReport({
   const colorHex = SCORE_COLORS[scoreColor]
 
   // Donut gauge calculations
-  const gaugeRadius = 52
+  const gaugeRadius = 64
   const gaugeCircumference = 2 * Math.PI * gaugeRadius
   const gaugeOffset = gaugeCircumference - (score / 100) * gaugeCircumference
-  const gaugeColor = score < 50 ? '#C0392B' : score < 75 ? '#D68910' : '#1A7F4B'
+  const gaugeColor = score < 50 ? '#E53935' : score < 75 ? '#F59E0B' : '#16A34A'
 
   return (
     <div>
@@ -502,16 +491,16 @@ function UnlockedReport({
         <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: '#FF6B35' }}>
           Your Score
         </p>
-        <div className="inline-block relative" style={{ width: 140, height: 140 }}>
-          <svg width="140" height="140" viewBox="0 0 140 140">
+        <div className="inline-block relative" style={{ width: 160, height: 160 }}>
+          <svg width="160" height="160" viewBox="0 0 160 160">
             {/* Background track */}
             <circle
-              cx="70" cy="70" r={gaugeRadius}
+              cx="80" cy="80" r={gaugeRadius}
               fill="none" stroke="#EEEEEE" strokeWidth="12"
             />
             {/* Score arc */}
             <circle
-              cx="70" cy="70" r={gaugeRadius}
+              cx="80" cy="80" r={gaugeRadius}
               fill="none"
               stroke={gaugeColor}
               strokeWidth="12"
@@ -524,10 +513,10 @@ function UnlockedReport({
           <div
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
-            <span className="text-4xl font-black" style={{ color: gaugeColor, lineHeight: 1 }}>
+            <span className="text-5xl font-black" style={{ color: gaugeColor, lineHeight: 1 }}>
               {score}
             </span>
-            <span className="text-xs font-medium" style={{ color: '#999999' }}>/ 100</span>
+            <span className="text-xs font-medium mt-1" style={{ color: '#999999' }}>/ 100</span>
           </div>
         </div>
         <p className="text-sm font-medium mt-2" style={{ color: gaugeColor }}>

@@ -13,6 +13,7 @@ import type { SectionEvaluation } from '@/lib/types'
  * =================================================================== */
 interface TeaserData {
   obscured_score: string
+  overall_score: number
   weakness_count: number
   strength_count: number
   first_finding: string | null
@@ -173,8 +174,8 @@ function TeaserReport({ teaser, reportId }: { teaser: TeaserData; reportId: stri
     return () => clearTimeout(timer)
   }, [])
 
-  // Parse full score from obscured_score
-  const teaserScore = parseInt(teaser.obscured_score, 10) || 0
+  // Use actual score from API
+  const teaserScore = teaser.overall_score
   const gaugeRadius = 64
   const gaugeCircumference = 2 * Math.PI * gaugeRadius
   const gaugeOffset = gaugeCircumference - (teaserScore / 100) * gaugeCircumference

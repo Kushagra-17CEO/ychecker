@@ -86,15 +86,14 @@ export async function GET(
         is_unlocked: false,
         teaser: {
           obscured_score: obscuredScore,
+          overall_score: report.overall_score,
           weakness_count: weaknessCount,
           strength_count: strengthCount,
           first_finding: firstSection
             ? `We found ${firstSection.weaknesses?.length || 0} Critical Weaknesses and ${firstSection.strengths?.length || 0} Strong Signals in your ${formatSectionLabel(firstSectionKey)}.`
             : null,
           section_labels: sectionLabels,
-          verdict_preview: report.verdict
-            ? report.verdict.substring(0, 60) + '...'
-            : null,
+          verdict_preview: report.verdict || null,
         },
       })
     }
